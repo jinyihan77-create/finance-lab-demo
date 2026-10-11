@@ -1434,11 +1434,81 @@ async function handleApi(request, response, pathname, url) {
 
 (function browserAdapter() {
   const nativeFetch=window.fetch.bind(window);
+  // —— 连接模式：live = 真链路（serve.py 代理到团队后端）；demo = 内置演示 harness。
+  // 每页通过 <html data-source="backend|demo|none"> 声明本页数据来源，右下角徽标如实显示。
+  let __mode='unknown';
+  function dataSource(){
+    const attr=document.documentElement.getAttribute('data-source');
+    return attr==='backend'||attr==='demo'?attr:'none';
+  }
+  function renderModePill(){
+    if(!document.body){document.addEventListener('DOMContentLoaded',()=>renderModePill(),{once:true});return;}
+    const source=dataSource();
+    let pill=document.getElementById('fl-mode-pill');
+    if(!pill){
+      pill=document.createElement('div');
+      pill.id='fl-mode-pill';
+      const style=document.createElement('style');
+      style.textContent='#fl-mode-pill{position:fixed;right:14px;bottom:14px;z-index:99;font-size:11px;letter-spacing:.4px;padding:7px 12px;border-radius:999px;color:#f3eee8;background:rgba(25,23,21,.86);border:1px solid rgba(232,216,195,.22);backdrop-filter:blur(12px);}'
+        +'#fl-mode-pill[data-mode="live"]{color:#d7f7e4;border-color:rgba(103,220,150,.45);}'
+        +'#fl-mode-pill[data-mode="demo"]{color:#ffd9b3;border-color:rgba(255,145,74,.5);}'
+        +'#fl-mode-pill[data-source="none"]{display:none;}';
+      document.head.appendChild(style);
+      document.body.appendChild(pill);
+    }
+    pill.dataset.source=source;
+    if(source==='none'){pill.style.display='none';return;}
+    pill.style.display='';
+    if(source==='demo'){
+      pill.dataset.mode='demo';
+      pill.textContent='● 本页演示数据 · 未接团队后端';
+      return;
+    }
+    pill.dataset.mode=__mode;
+    pill.textContent=__mode==='live'?'● 真链路已连接 · 团队后端':__mode==='demo'?'● 演示模式 · 团队后端未连接':'○ 连接检测中…';
+  }
+  function setMode(mode){
+    if(__mode===mode)return;
+    __mode=mode;
+    renderModePill();
+    window.dispatchEvent(new CustomEvent('finance-lab-mode',{detail:mode}));
+  }
+  renderModePill();
+  window.FinanceLab={
+    get mode(){return __mode;},
+    onModeChange(fn){window.addEventListener('finance-lab-mode',e=>fn(e.detail));},
+  };
   window.fetch=async function(input,init={}) {
     const url=new URL(input instanceof Request?input.url:String(input),location.href);
     if(url.origin!==location.origin||!url.pathname.startsWith('/api/'))return nativeFetch(input,init);
     const signal=init.signal||(input instanceof Request?input.signal:null);
     if(signal?.aborted)throw signal.reason||new DOMException('Aborted','AbortError');
+    // 真链路优先：同源 /api 由 serve.py 代理到团队后端时直接使用真实响应；
+    // 后端未启动（503 BACKEND_UNAVAILABLE）或路由不在白名单（404）时回退演示 harness。
+    if(typeof AbortController!=='undefined'){
+      const controller=new AbortController();
+      const timer=setTimeout(()=>controller.abort(),4000);
+      try{
+        const liveInit={};
+        if(init.method)liveInit.method=init.method;
+        if(init.headers)liveInit.headers=init.headers;
+        if(init.body!==undefined)liveInit.body=init.body;
+        const live=await nativeFetch(url,Object.assign(liveInit,{signal:controller.signal}));
+        clearTimeout(timer);
+        let fallback=false;
+        if(live.status===503){
+          try{const probe=await live.clone().json();if(probe&&probe.error&&probe.error.code==='BACKEND_UNAVAILABLE')fallback=true;}catch(_){}
+        }else if(live.status===404){
+          fallback=true;
+          const ctype=live.headers.get('content-type')||'';
+          if(ctype.includes('application/json')){
+            try{const probe=await live.clone().json();if(probe&&probe.error&&probe.error.code&&probe.error.code!=='API_NOT_FOUND')fallback=false;}catch(_){}
+          }
+        }
+        if(!fallback){if(signal?.aborted)throw signal.reason||new DOMException('Aborted','AbortError');setMode('live');return live;}
+      }catch(_){clearTimeout(timer);}
+    }
+    setMode('demo');
     const request={method:(init.method||(input instanceof Request?input.method:'GET')).toUpperCase(),bodyText:init.body!==undefined?String(init.body):(input instanceof Request?await input.text():'')};
     let status=200,headers={},payload='';
     const response={headersSent:false,setHeader(name,value){headers[name]=value;},writeHead(code,values){status=code;Object.assign(headers,values);this.headersSent=true;},end(value){payload=value||'';}};

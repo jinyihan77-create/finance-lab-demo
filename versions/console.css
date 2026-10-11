@@ -1,0 +1,131 @@
+/* 银行 AI 智能体 · 安全任务执行台（workspace.html）
+   沿用 kosx/glass 深色体系：--paper #0a0a0a、金橙强调、玻璃卡片。 */
+
+body.banking-product { --paper:#0a0a0a; --ink:#f7f7f5; --muted:#a1a1a6; --green:#ff8b38; --pale:#25180f; --line:#2a2a2e; --red:#ff8d8d; --amber:#ffb347; background:var(--paper); color:var(--ink); font-family:Inter,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif; font-size:14px; }
+body.banking-product .panel { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:23px; margin:0 0 19px; }
+body.banking-product .panel h2 { font-size:17px; font-weight:600; }
+body.banking-product .compact-detail { margin-top:14px; }
+body.banking-product .compact-detail summary { font-size:12px; }
+
+/* 侧栏角色分组 */
+.role-group { margin:14px 0 6px; font-size:9px; letter-spacing:1.6px; text-transform:uppercase; color:var(--muted); opacity:.75; }
+
+/* 自然语言输入 */
+.nl-box { margin:14px 0 10px; }
+.nl-box textarea { width:100%; box-sizing:border-box; resize:vertical; min-height:58px; padding:15px 17px; font:inherit; font-size:15px; color:var(--ink); background:rgba(25,23,21,.62); border:1px solid var(--line); border-radius:10px; outline:none; backdrop-filter:blur(8px); }
+.nl-box textarea:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(255,139,56,.14); }
+
+/* 示例请求 chips */
+.example-chips { display:flex; flex-wrap:wrap; gap:8px; margin:4px 0 14px; }
+.example-chip { font-size:11px; padding:7px 12px; border-radius:999px; color:var(--ink); background:rgba(25,23,21,.7); border:1px solid rgba(232,216,195,.18); cursor:pointer; }
+.example-chip:hover { border-color:var(--green); color:#ffc9a0; }
+
+/* 主按钮（金色强调，与 hero-cta 同族） */
+.primary { display:inline-block; padding:13px 22px; font:inherit; font-weight:600; font-size:14px; color:#17100a; background:linear-gradient(135deg,#ffb865,#ed7627); border:1px solid transparent; border-radius:10px; cursor:pointer; }
+.primary:hover { filter:brightness(1.06); }
+.primary:disabled { opacity:.55; cursor:not-allowed; }
+
+/* 权限徽章 */
+.tier-badge { display:inline-block; font-size:10px; padding:4px 9px; border-radius:999px; letter-spacing:.3px; white-space:nowrap; }
+.tier-badge.tier-green { color:#a9e8c2; background:rgba(43,120,84,.22); border:1px solid rgba(91,211,154,.42); }
+.tier-badge.tier-yellow { color:#ffd9a3; background:rgba(158,103,31,.22); border:1px solid rgba(255,179,71,.45); }
+.tier-badge.tier-red { color:#ffc2c2; background:rgba(146,52,52,.24); border:1px solid rgba(255,141,141,.5); }
+.tier-badge.tier-blocked { color:#d7d1c9; background:rgba(120,116,110,.2); border:1px solid rgba(200,194,184,.4); }
+
+/* 结论标签按权限着色 */
+.verdict-tag.tier-text-green { color:#a9e8c2; background:#12281b; border-color:#2f6b4a; }
+.verdict-tag.tier-text-yellow { color:#ffd9a3; background:#2b1e0e; border-color:#6b4c22; }
+.verdict-tag.tier-text-red { color:#ffc2c2; background:#2c1515; border-color:#7a3d3d; }
+.verdict-tag.tier-text-blocked { color:#d7d1c9; background:#211f1d; border-color:#4a4742; }
+
+/* 任务 DAG */
+.dag-list { list-style:none; margin:12px 0 4px; padding:0; display:flex; flex-direction:column; gap:8px; }
+.dag-node { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:9px; background:rgba(25,23,21,.6); border:1px solid var(--line); }
+.dag-node .dag-index { font-size:10px; letter-spacing:1px; color:var(--muted); }
+.dag-node b { display:block; font-size:13px; font-weight:600; }
+.dag-node small { font-size:9px; letter-spacing:1.2px; opacity:.7; }
+.dag-node .dag-status { margin-left:auto; font-size:10px; white-space:nowrap; }
+.dag-node.node-done { border-color:rgba(91,211,154,.35); }
+.dag-node.node-done .dag-status { color:#a9e8c2; }
+.dag-node.node-blocked { border-color:rgba(255,141,141,.45); }
+.dag-node.node-blocked .dag-status { color:#ffc2c2; }
+.dag-node.node-scheduled .dag-status { color:#ffd9a3; }
+
+/* 证据 */
+.evidence-dl { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:10px; margin:12px 0; padding:0; }
+.evidence-row { background:rgba(25,23,21,.55); border:1px solid var(--line); border-radius:8px; padding:11px 13px; min-width:0; }
+.evidence-row dt { font-size:10px; letter-spacing:1.2px; color:var(--muted); text-transform:uppercase; margin-bottom:4px; }
+.evidence-row dd { margin:0; font-size:13px; overflow-wrap:anywhere; }
+#evidence { max-height:260px; overflow:auto; font-size:11px; color:#d9d2c8; background:#0e0d0c; border:1px solid var(--line); border-radius:8px; padding:12px; }
+
+/* 待确认 */
+.pending-list { display:flex; flex-direction:column; gap:12px; margin-top:14px; }
+.pending-item { padding:17px; border-radius:11px; background:rgba(25,23,21,.62); border:1px solid var(--line); }
+.pending-item h3 { font-size:14px; margin:0 0 6px; }
+.pending-item .row { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+.pending-item.tier-yellow { border-color:rgba(255,179,71,.35); }
+.pending-item.tier-red { border-color:rgba(255,141,141,.4); }
+.pending-item .subtle { margin-top:12px; }
+.verify-row { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; margin-top:12px; }
+.verify-row .field { display:flex; flex-direction:column; gap:6px; min-width:220px; }
+.verify-row .field input { padding:11px 13px; font:inherit; font-size:14px; color:var(--ink); background:#101010; border:1px solid #3a3a3e; border-radius:8px; outline:none; }
+.verify-row .field input:focus { border-color:var(--green); }
+.verify-row .checkline { display:flex; align-items:center; gap:8px; padding:10px 0; font-size:13px; }
+
+/* 场景能力 */
+.scenario-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin-top:14px; }
+.scenario-card { padding:17px; border-radius:11px; background:rgba(25,23,21,.62); border:1px solid var(--line); }
+.scenario-card .card-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:9px; }
+.scenario-card .feature-icon { font-size:17px; }
+.scenario-card h3 { font-size:14px; margin:0 0 6px; }
+.scenario-card p { font-size:12px; margin:6px 0; color:var(--muted); }
+.scenario-card.is-static { opacity:.8; border-style:dashed; }
+
+/* 权限分级矩阵 */
+.tier-matrix { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:12px; margin-top:14px; }
+.tier-card { padding:17px; border-radius:11px; background:rgba(25,23,21,.62); border:1px solid var(--line); }
+.tier-card h3 { font-size:14px; margin:0; }
+.tier-card p { font-size:12px; line-height:1.7; }
+.tier-card.tier-green { border-color:rgba(91,211,154,.35); }
+.tier-card.tier-yellow { border-color:rgba(255,179,71,.35); }
+.tier-card.tier-red { border-color:rgba(255,141,141,.4); }
+
+/* 熔断与审计 */
+.breaker-box { margin:12px 0; padding:14px 16px; border-radius:9px; background:rgba(25,23,21,.55); border:1px solid var(--line); }
+.breaker-box .danger { color:#ffb0b0; }
+.audit-list { display:flex; flex-direction:column; margin-top:6px; }
+.audit-row { display:flex; gap:12px; align-items:flex-start; padding:11px 4px; border-bottom:1px solid rgba(232,216,195,.08); }
+.audit-dot { width:8px; height:8px; border-radius:50%; margin-top:5px; background:#5bd39a; flex-shrink:0; }
+.audit-dot.is-failure { background:#ff8d8d; }
+.audit-dot.is-pending { background:#ffb347; }
+.audit-main { flex:1; min-width:0; }
+.audit-main b { font-size:13px; }
+.audit-main p { margin:4px 0 0; font-size:11px; }
+.audit-row .raw summary { font-size:10px; color:var(--muted); cursor:pointer; }
+.audit-row .raw pre { font-size:10px; max-height:180px; overflow:auto; background:#0e0d0c; border:1px solid var(--line); border-radius:6px; padding:9px; }
+.chip-chip { display:inline-block; margin-left:8px; font-size:9px; padding:2px 7px; border-radius:999px; vertical-align:1px; }
+.chip-green { color:#a9e8c2; background:rgba(43,120,84,.2); }
+.chip-red { color:#ffc2c2; background:rgba(146,52,52,.22); }
+.chip-amber { color:#ffd9a3; background:rgba(158,103,31,.2); }
+
+/* 后端未连接提示 */
+.notice-note { display:flex; gap:12px; align-items:flex-start; margin:12px 0; padding:14px 16px; border-radius:9px; background:#241b12; border:1px solid #805331; color:#f2c390; font-size:12px; }
+.notice-note p { margin:0; line-height:1.8; }
+.notice-note code { font-size:11px; background:#17100a; padding:2px 7px; border-radius:5px; }
+
+/* 产品目录主卡 */
+.catalog-lead { grid-template-columns:1fr; margin-bottom:16px; }
+.catalog-lead .banking-choice { min-height:0; border-top:2px solid #ff6a00; }
+
+/* 移动端 */
+@media (max-width:650px) {
+  body.banking-product .panel { padding:18px; }
+  .scenario-grid, .tier-matrix { grid-template-columns:1fr; }
+  .dag-node { gap:8px; padding:10px 12px; }
+  .evidence-dl { grid-template-columns:1fr; }
+  .verify-row { flex-direction:column; align-items:stretch; }
+  .verify-row .field { min-width:0; }
+  .pending-item .row { flex-direction:column; }
+  .nl-box textarea { font-size:14px; }
+  .example-chip { font-size:10px; }
+}
