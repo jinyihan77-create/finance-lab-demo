@@ -1,5 +1,5 @@
 import { initArchiveWorkbench } from './archive.js';
-import { $, esc, api, toast, feedback, busy } from "./common.js";
+import { $, esc, api, toast, feedback, busy, smoothScrollTo } from "./common.js";
 
 const TIER_TEXT = {
   green: "绿色权限 · 自动执行",
@@ -221,7 +221,8 @@ async function runQuestion(question, sourceCard, localAction) {
   if (sourceCard) sourceCard.classList.add("is-busy");
   $("#result-anchor").hidden = true;
   $("#results").hidden = false;
-  $("#result-summary").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" });
+  document.querySelector('.section-nav a[href="#result-anchor"]')?.setAttribute("href", "#result-summary");
+  smoothScrollTo($("#result-summary").getBoundingClientRect().top + window.scrollY - 14);
   $("#result-metrics").innerHTML = `<article class="metric"><small>状态</small><strong>正在处理…</strong><small>${esc(trimmed)}</small></article>`;
   try {
     let res;
@@ -420,7 +421,7 @@ function showSourceGuide(source) {
       <b>${esc(guide.title)}</b>
       <ol>${guide.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>
     </div>`;
-  $("#source-guide").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  smoothScrollTo($("#source-guide").getBoundingClientRect().top + window.scrollY - 14);
 }
 function detectSourcePhrase(text) {
   const t = String(text || "");
@@ -496,7 +497,7 @@ function renderCsvPreview(result, filename) {
   }${rows.length > 50 ? `<tr><td colspan="${keys.length}" class="small muted">仅显示前 50 条</td></tr>` : ""}</tbody></table></div>`;
   box.innerHTML = stats + table
     + `<p class="small muted">本地解析预览：文件只在你的浏览器里读取，不上传服务器。解析规则是演示级识别，格式特殊时可能不完整。</p>`;
-  box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  smoothScrollTo(box.getBoundingClientRect().top + window.scrollY - 14);
 }
 
 // ---------- 启动 ----------

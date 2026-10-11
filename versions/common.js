@@ -34,6 +34,24 @@ export function downloadLink(url) {
   anchor.href = url; anchor.download = ""; anchor.hidden = true;
   document.body.append(anchor); anchor.click(); anchor.remove();
 }
+// 不依赖原生 smooth 与 rAF 的滚动：部分嵌入环境既不执行 smooth scrollIntoView 也不触发 rAF，
+// 用 setInterval 驱动，任何环境都有确定效果。
+export function smoothScrollTo(targetY, duration = 420) {
+  const startY = window.scrollY;
+  const delta = targetY - startY;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced || Math.abs(delta) < 2) {
+    window.scrollTo(0, targetY);
+    return;
+  }
+  const start = Date.now();
+  const ease = t => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+  const timer = setInterval(() => {
+    const p = Math.min(1, (Date.now() - start) / duration);
+    window.scrollTo(0, Math.round(startY + delta * ease(p)));
+    if (p >= 1) clearInterval(timer);
+  }, 12);
+}
 document.addEventListener("click",event=>{
   const anchor=event.target.closest('a[href^="#"]');
   if(anchor) {
@@ -43,7 +61,7 @@ document.addEventListener("click",event=>{
   const button=event.target.closest("[data-reveal]");
   if(!button)return;
   const panel=document.getElementById(button.dataset.reveal);
-  if(panel){ panel.scrollIntoView({behavior:"smooth",block:"start"});panel.focus({preventScroll:true}); }
+  if(panel){ smoothScrollTo(panel.getBoundingClientRect().top + window.scrollY - 14); panel.focus({preventScroll:true}); }
 });
 document.addEventListener("click",event=>{
   const button=event.target.closest("[data-tip-toggle]");
