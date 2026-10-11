@@ -78,6 +78,19 @@ let overview = null;
 let lastResult = null;
 let running = false;
 
+// ---------- 视图切换（顶部导航栏） ----------
+function switchView(name) {
+  document.querySelectorAll(".console-view").forEach(v => v.classList.toggle("is-active", v.dataset.view === name));
+  document.querySelectorAll(".console-tab").forEach(t => t.classList.toggle("is-active", t.dataset.viewBtn === name));
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll("[data-view-btn]").forEach(btn => {
+  btn.addEventListener("click", () => switchView(btn.dataset.viewBtn));
+});
+document.querySelectorAll('.section-nav a[data-view]').forEach(a => {
+  a.addEventListener("click", (event) => { event.preventDefault(); switchView(a.dataset.view); });
+});
+
 const tierBadge = (tier, label) =>
   `<span class="tier-badge tier-${esc(tier || "green")}">${esc(label || TIER_TEXT[tier] || tier)}</span>`;
 
@@ -93,6 +106,10 @@ async function boot() {
     $("#conn-stamp").textContent = "真链路已连接 · 团队后端";
     $("#backend-notice").hidden = true;
     $("#run").disabled = false;
+    try {
+      const pendingData = await api("/api/scenarios/pending");
+      renderPending((pendingData && pendingData.pending) || []);
+    } catch (_) { /* 待确认读取失败不影响主体 */ }
   } catch (error) {
     overview = null;
     $("#conn-stamp").textContent = "演示模式 · 后端未连接";
@@ -216,14 +233,14 @@ async function runQuestion(question, sourceCard, localAction) {
   const trimmed = String(question).trim();
   $("#question").value = trimmed;
   if (overview === null) { $("#run").disabled = false; }
-  detectSourcePhrase(trimmed);
+  const sourceHint = detectSourcePhrase(trimmed);
   running = true;
   if (sourceCard) sourceCard.classList.add("is-busy");
+  lastResult = null;
   $("#result-anchor").hidden = true;
   $("#results").hidden = false;
-  document.querySelector('.section-nav a[href="#result-anchor"]')?.setAttribute("href", "#result-summary");
-  smoothScrollTo($("#result-summary").getBoundingClientRect().top + window.scrollY - 14);
   $("#result-metrics").innerHTML = `<article class="metric"><small>状态</small><strong>正在处理…</strong><small>${esc(trimmed)}</small></article>`;
+  switchView(sourceHint ? "bills" : "results");
   try {
     let res;
     if (localAction === "balance") {
@@ -233,7 +250,12 @@ async function runQuestion(question, sourceCard, localAction) {
     }
     lastResult = res;
     renderRun(res);
-    toast(res.delegated ? "已转交理财旗舰闭环。" : "已完成，结果在下面。");
+    if (sourceHint) {
+      toast("已用演示账单跑了一次分析，结果在「结果」页；账单指引就在本页。");
+    } else {
+      toast(res.delegated ? "已转交理财旗舰闭环。" : "已完成，结果在下面。");
+      switchView("results");
+    }
   } catch (error) {
     $("#result-metrics").innerHTML = "";
     $("#verdict-title").textContent = "出了点问题";
@@ -339,6 +361,8 @@ function renderEvidence(data) {
 // ---------- 待确认（一键化） ----------
 function renderPending(items) {
   $("#pending-count").textContent = String(items.length);
+  const badge = $("#pending-badge");
+  if (badge) { badge.hidden = items.length === 0; badge.textContent = String(items.length); }
   const list = $("#pending-list");
   if (!items.length) {
     list.innerHTML = `<p class="small muted">暂无。转账、挂失等操作执行前会在这里等你确认。</p>`;
@@ -430,7 +454,9 @@ function detectSourcePhrase(text) {
     else if (/微信/.test(t)) showSourceGuide("wechat");
     else if (/银行/.test(t)) showSourceGuide("bank");
     else showSourceGuide("file");
+    return true;
   }
+  return false;
 }
 document.querySelectorAll(".source-card").forEach(card => {
   card.addEventListener("click", () => showSourceGuide(card.dataset.source));

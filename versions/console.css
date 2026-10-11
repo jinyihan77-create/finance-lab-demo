@@ -117,6 +117,15 @@ body.banking-product .compact-detail summary { font-size:12px; }
 .catalog-lead { grid-template-columns:1fr; margin-bottom:16px; }
 .catalog-lead .banking-choice { min-height:0; border-top:2px solid #ff6a00; }
 
+/* 顶部导航栏 + 视图切换 */
+.console-nav { position:sticky; top:8px; z-index:30; display:flex; gap:4px; padding:8px; margin:0 0 20px; background:rgba(20,18,16,.88); border:1px solid var(--line); border-radius:14px; backdrop-filter:blur(16px); overflow-x:auto; }
+.console-tab { flex-shrink:0; display:inline-flex; align-items:center; gap:7px; padding:11px 20px; font:inherit; font-size:14px; font-weight:600; color:var(--muted); background:transparent; border:1px solid transparent; border-radius:10px; cursor:pointer; transition:color .18s,background .18s,border-color .18s; white-space:nowrap; }
+.console-tab:hover { color:var(--ink); border-color:var(--line); }
+.console-tab.is-active { color:#17100a; background:linear-gradient(135deg,#ffb865,#ed7627); border-color:transparent; }
+.console-tab .nav-badge { margin-left:2px; padding:1px 8px; border-radius:999px; font-size:10px; font-weight:700; color:#fff; background:#b44747; }
+.console-view { display:none; }
+.console-view.is-active { display:block; }
+
 /* 一键任务 */
 .quick-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; margin-top:14px; }
 .quick-card { display:flex; flex-direction:column; align-items:flex-start; gap:10px; padding:18px 16px; font:inherit; text-align:left; color:var(--ink); background:rgba(25,23,21,.66); border:1px solid var(--line); border-radius:12px; cursor:pointer; transition:border-color .18s,transform .18s,box-shadow .18s; }
