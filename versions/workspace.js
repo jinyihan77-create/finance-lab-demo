@@ -3,13 +3,13 @@ import { $, esc, api, toast, feedback, busy } from "./common.js";
 
 const TIER_TEXT = {
   green: "绿色权限 · 自动执行",
-  yellow: "黄色权限 · 明确确认",
+  yellow: "黄色权限 · 需确认",
   red: "红色权限 · 强验证",
   blocked: "已拦截",
 };
 const STATUS_TEXT = {
   done: "已完成",
-  pending_confirmation: "等待确认",
+  pending_confirmation: "等你确认",
   blocked: "已拦截",
   scheduled: "已排期",
   delegated: "已转交",
@@ -18,27 +18,70 @@ const NODE_STATUS_TEXT = {
   done: "已完成", pending: "待执行", blocked: "已拦截", scheduled: "已排期", skipped: "已跳过",
 };
 
-// —— 演示模式下的静态说明（仅元信息，不模拟执行结果）——
-const STATIC_SCENARIOS = [
-  { key: "bill", name: "账单分析", icon: "📊", desc: "消费分类统计、异常交易识别、月度/年度账单报告", tier_note: "绿（自动执行）", examples: ["这个月账单分析", "帮我看看有没有异常交易"] },
-  { key: "transfer", name: "智能转账", icon: "💸", desc: "按人名/手机号转账、备注、定时转账、AA 收款", tier_note: "日累计≤1000 黄（确认）｜>1000 红（强验证）", examples: ["给陈大黄转500元备注聚餐", "给林粹转5000"] },
-  { key: "card", name: "卡片管理", icon: "💳", desc: "卡查询、额度调整、交易限制、锁卡解锁、挂失", tier_note: "查询绿｜调整/锁卡黄｜挂失红（强验证）", examples: ["尾号8888的卡挂失", "锁一下尾号8888的信用卡"] },
-  { key: "subscription", name: "订阅/代扣管理", icon: "🔁", desc: "自动识别订阅扣费、续费提醒、一键取消订阅", tier_note: "查询绿｜取消黄（确认）", examples: ["我有哪些订阅？", "取消健身房会员"] },
-  { key: "wealth", name: "理财操作", icon: "🏦", desc: "组合体检、产品推荐与对比、风险评估、申赎（深度旗舰）", tier_note: "绿/红（申赎强验证）", examples: ["平安银行卖出 30%"] },
-  { key: "cross_scene", name: "跨场景联动", icon: "🎂", desc: "检测「爱人生日」→ 锁定活期 → 生日前 2 天订花与蛋糕", tier_note: "计划绿｜锁定资金黄（确认）", examples: ["我爱人10月25日生日，锁定1000元活期"] },
+// 旧演示姓名兜底清洗（后端已换真实人名，这里防历史状态串进来）
+const NAME_MAP = { "陈大黄": "王芳", "林粹": "李明", "邹昕成": "张伟", "陆小果": "刘洋" };
+const cleanText = (value) => {
+  let text = value === null || value === undefined ? "" : String(value);
+  for (const [from, to] of Object.entries(NAME_MAP)) text = text.split(from).join(to);
+  return text;
+};
+
+// 一键任务：点击即执行
+const QUICK_TASKS = [
+  { icon: "📊", label: "这个月花了多少", question: "这个月账单分析" },
+  { icon: "⚠️", label: "有没有异常交易", question: "帮我看看有没有异常交易" },
+  { icon: "🔁", label: "我有哪些订阅", question: "我有哪些订阅？" },
+  { icon: "💰", label: "账户还有多少钱", question: "查询账户余额", local: "balance" },
+  { icon: "💳", label: "我的卡什么状态", question: "查询我的银行卡" },
+  { icon: "💸", label: "给王芳转 500 元", question: "给王芳转500元备注聚餐" },
+  { icon: "🛡️", label: "挂失尾号 8888 的卡", question: "尾号8888的卡挂失" },
+  { icon: "🎂", label: "给爱人备生日", question: "我爱人10月25日生日，锁定1000元活期" },
 ];
-const STATIC_TIERS = [
-  { tier: "green", label: "绿色权限", items: "余额/交易记录查询、账单分析、订阅与续费查询、卡片状态查询、理财收益查询", policy: "确认意图后自动执行，无需二次确认" },
-  { tier: "yellow", label: "黄色权限", items: "小额转账（日累计≤1000元）、订阅取消、额度/限额调整、锁卡解锁", policy: "执行前展示操作详情并获得明确确认" },
-  { tier: "red", label: "红色权限", items: "大额转账（日累计>1000元）、卡片挂失/解挂、理财产品申赎", policy: "须通过人脸识别、短信验证码或 U 盾等多因子认证" },
-];
+
+// 账单来源指引
+const SOURCE_GUIDES = {
+  alipay: {
+    title: "在支付宝里看账单",
+    steps: [
+      "打开支付宝 → 右下角「我的」→「账单」",
+      "右上角「···」→「开具交易流水证明」或「导出账单」→ 选时间范围 → 邮箱接收或保存文件",
+      "拿到 CSV/PDF 后：点下方「选择账单文件」，或直接截图看流水",
+    ],
+  },
+  wechat: {
+    title: "在微信里看账单",
+    steps: [
+      "打开微信 → 「我」→「服务」→「钱包」→「账单」",
+      "右上角「常见问题」→「下载账单」→ 选时间范围 → 填写邮箱接收",
+      "拿到文件后：点下方「选择账单文件」，或直接截图看流水",
+    ],
+  },
+  bank: {
+    title: "在银行 App 里看流水",
+    steps: [
+      "打开你常用的银行 App（招行、工行、建行等）",
+      "首页或「我的」→「交易明细 / 流水查询」→ 选择近三个月",
+      "点「导出」保存为 Excel/CSV：点下方「选择账单文件」，或直接截图看流水",
+    ],
+  },
+  file: {
+    title: "直接把文件给我",
+    steps: [
+      "把银行/支付宝/微信导出的 CSV、Excel 或 JSON 文件保存到手机或电脑",
+      "点下方「选择账单文件」，我本地解析给你看（数据不上传服务器）",
+      "格式不确定也没关系，点「分析演示账单」可以先看效果",
+    ],
+  },
+};
 
 let overview = null;
 let lastResult = null;
+let running = false;
 
 const tierBadge = (tier, label) =>
   `<span class="tier-badge tier-${esc(tier || "green")}">${esc(label || TIER_TEXT[tier] || tier)}</span>`;
 
+// ---------- 初始化 ----------
 async function boot() {
   try {
     overview = await api("/api/scenarios/boot");
@@ -55,14 +98,19 @@ async function boot() {
     $("#conn-stamp").textContent = "演示模式 · 后端未连接";
     $("#backend-notice").hidden = false;
     $("#run").disabled = true;
-    renderScenarios(STATIC_SCENARIOS, true);
     renderTiers(STATIC_TIERS, true);
-    renderExamples(STATIC_SCENARIOS, true);
     renderBreaker({ locked: false, consecutive_failures: 0 }, true);
+    renderExamples([]);
     $("#account-strip").innerHTML = `<span>账户状态未连接</span><span>真链路开启后展示余额与账户状态</span>`;
-    feedback("#run-feedback", "团队后端未连接：请运行 python web/launch.py（127.0.0.1:8765）后刷新本页。", "error");
   }
+  renderQuickTasks();
 }
+
+const STATIC_TIERS = [
+  { tier: "green", label: "绿色权限", items: "查询类：余额、账单、订阅、卡片状态", policy: "确认意图后自动执行" },
+  { tier: "yellow", label: "黄色权限", items: "小额转账（日累计≤1000）、取消订阅、锁卡", policy: "执行前等你点头确认" },
+  { tier: "red", label: "红色权限", items: "大额转账、卡片挂失、理财申赎", policy: "需要短信+人脸强验证（演示 Mock）" },
+];
 
 function fmtYuan(value) {
   return new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY" }).format(Number(value || 0));
@@ -73,22 +121,48 @@ function renderStrip(data) {
   const subs = (data.subscriptions || []).length;
   $("#account-strip").innerHTML = [
     `<span>可用余额 <b>${fmtYuan(data.balance)}</b></span>`,
-    `<span>今日累计转账 <b>${fmtYuan(data.daily_cumulative)}</b></span>`,
+    `<span>今日已转 <b>${fmtYuan(data.daily_cumulative)}</b></span>`,
     `<span>卡片 <b>${cards}</b> 张</span>`,
     `<span>订阅 <b>${subs}</b> 个</span>`,
     `<span class="small muted">演示账户 · 未发生真实资金转移</span>`,
   ].join("");
 }
 
-function renderScenarios(scenarios, isStatic) {
-  $("#scenario-grid").innerHTML = scenarios.map(s => `
-    <article class="scenario-card${isStatic ? " is-static" : ""}">
+function renderQuickTasks() {
+  $("#quick-grid").innerHTML = QUICK_TASKS.map(t => `
+    <button type="button" class="quick-card" data-question="${esc(t.question)}"${t.local ? ` data-local="${esc(t.local)}"` : ""}>
+      <span class="quick-icon">${t.icon}</span>
+      <b>${esc(t.label)}</b>
+    </button>`).join("");
+  document.querySelectorAll(".quick-card").forEach(card => {
+    card.addEventListener("click", () => runQuestion(card.dataset.question, card, card.dataset.local || null));
+  });
+}
+
+function renderScenarios(scenarios) {
+  const cards = (scenarios && scenarios.length ? scenarios : STATIC_SCENARIOS).map(s => `
+    <button type="button" class="scenario-card" data-question="${esc((s.examples || [])[0] || "")}">
       <div class="card-top"><span class="feature-icon">${esc(s.icon || "")}</span><span class="terminal-label">${esc((s.key || "").toUpperCase())}</span></div>
       <h3>${esc(s.name)}</h3>
       <p>${esc(s.desc)}</p>
       <p class="small muted">${esc(s.tier_note)}</p>
-    </article>`).join("") + (isStatic ? `<p class="small muted">以上为静态能力说明；接入真链路后由后端实时提供。</p>` : "");
+    </button>`);
+  $("#scenario-grid").innerHTML = cards.join("");
+  document.querySelectorAll(".scenario-card").forEach(card => {
+    card.addEventListener("click", () => {
+      if (card.dataset.question) runQuestion(card.dataset.question, card);
+    });
+  });
 }
+
+const STATIC_SCENARIOS = [
+  { key: "transfer", name: "智能转账", icon: "💸", desc: "按人名/手机号转账、备注、AA 收款", tier_note: "日累计≤1000 黄（确认）｜>1000 红（强验证）", examples: ["给王芳转500元备注聚餐"] },
+  { key: "bill", name: "账单分析", icon: "📊", desc: "消费分类统计、异常交易识别、账单报告", tier_note: "绿（自动执行）", examples: ["这个月账单分析"] },
+  { key: "wealth", name: "理财操作", icon: "🏦", desc: "组合体检、方案对比、风险评估（深度旗舰）", tier_note: "绿/红（申赎强验证）", examples: ["平安银行卖出 30%"] },
+  { key: "card", name: "卡片管理", icon: "💳", desc: "卡查询、额度调整、锁卡解锁、挂失", tier_note: "查询绿｜调整/锁卡黄｜挂失红", examples: ["尾号8888的卡挂失"] },
+  { key: "subscription", name: "订阅/代扣", icon: "🔁", desc: "识别订阅扣费、续费提醒、取消订阅", tier_note: "查询绿｜取消黄（确认）", examples: ["我有哪些订阅？"] },
+  { key: "cross_scene", name: "跨场景联动", icon: "🎂", desc: "生日提醒 → 锁定资金 → 提前订花订蛋糕", tier_note: "计划绿｜锁定资金黄（确认）", examples: ["我爱人10月25日生日，锁定1000元活期"] },
+];
 
 function renderTiers(tiers, isStatic) {
   $("#tier-matrix").innerHTML = tiers.map(t => `
@@ -96,39 +170,26 @@ function renderTiers(tiers, isStatic) {
       <div class="row"><h3>${esc(t.label)}</h3>${tierBadge(t.tier, t.label)}</div>
       <p><b>覆盖：</b>${esc(t.items)}</p>
       <p class="small muted"><b>策略：</b>${esc(t.policy)}</p>
-    </article>`).join("") + (isStatic ? `<p class="small muted">以上为静态权限说明；接入真链路后由 tiers.py 唯一权威决定。</p>` : "");
-}
-
-function renderExamples(scenarios) {
-  const chips = scenarios.flatMap(s => (s.examples || []).slice(0, 1).map(ex => ({ ex, note: s.tier_note })));
-  $("#example-chips").innerHTML = chips.slice(0, 6).map(c =>
-    `<button type="button" class="example-chip" data-example="${esc(c.ex)}" title="${esc(c.note)}">${esc(c.ex)}</button>`).join("");
-  document.querySelectorAll(".example-chip").forEach(chip => {
-    chip.addEventListener("click", () => {
-      $("#question").value = chip.dataset.example;
-      $("#run").disabled = false;
-      $("#question").focus();
-    });
-  });
+    </article>`).join("") + (isStatic ? `<p class="small muted">以上为静态说明；接入真链路后由 tiers.py 唯一权威决定。</p>` : "");
 }
 
 function renderBreaker(breaker, isStatic) {
   const box = $("#breaker-box");
   if (!breaker || (!breaker.locked && !breaker.events?.length)) {
     box.innerHTML = `<p class="small muted">熔断状态：正常（连续安全事件 ${breaker?.consecutive_failures ?? 0}/${breaker?.threshold ?? 3}）。${
-      isStatic ? "静态说明：接入真链路后实时展示。" : "红色强验证失败会累计安全事件，连续 3 次即锁定资金执行链路。"}</p>`;
+      isStatic ? "静态说明。" : "强验证连续失败 3 次会锁定资金执行，需人工恢复。"}</p>`;
     return;
   }
   const lockNote = breaker.locked
-    ? `<p class="small danger"><b>⛔ 熔断锁定中：</b>${esc(breaker.reason || "连续安全事件超过阈值")}（锁定于 ${esc(breaker.locked_at || "—")}）。查询类仍可用，资金执行需人工恢复。</p>`
-    : `<p class="small muted">连续安全事件 ${breaker.consecutive_failures}/${breaker.threshold}。再失败 ${Math.max(0, breaker.threshold - breaker.consecutive_failures)} 次将锁定资金执行链路。</p>`;
+    ? `<p class="small danger"><b>⛔ 熔断锁定中：</b>${esc(breaker.reason || "连续安全事件超过阈值")}。查询仍可用，资金执行需人工恢复。</p>`
+    : `<p class="small muted">连续安全事件 ${breaker.consecutive_failures}/${breaker.threshold}，再失败 ${Math.max(0, breaker.threshold - breaker.consecutive_failures)} 次将锁定资金执行。</p>`;
   box.innerHTML = lockNote
     + (breaker.locked ? `<button id="breaker-reset" class="secondary">人工确认恢复</button>` : "")
     + `<details class="compact-detail"><summary>安全事件记录</summary>${(breaker.events || []).slice().reverse().map(e =>
       `<p class="small">${esc(String(e.timestamp || e.ts || ""))} · ${esc(String(e.kind || e.type || e.reason || ""))}</p>`).join("") || `<p class="small muted">暂无事件。</p>`}</details>`;
   const resetBtn = $("#breaker-reset");
   if (resetBtn) resetBtn.addEventListener("click", async () => {
-    if (!window.confirm("人工恢复将解除资金执行锁定。确定恢复吗？（该动作会进入审计）")) return;
+    if (!window.confirm("人工恢复将解除资金执行锁定。确定恢复吗？")) return;
     await busy(resetBtn, "恢复中…", async () => {
       try { const res = await api("/api/breaker/reset", {}); toast(res.message || "已恢复。"); await refreshSidebarState(); }
       catch (error) { toast(error.message); }
@@ -149,52 +210,93 @@ async function refreshSidebarState() {
   } catch (error) { toast("状态刷新失败：" + error.message); }
 }
 
-// —— 任务发起 ——
-$("#task-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const question = $("#question").value.trim();
-  if (!question) return;
-  await busy($("#run"), "正在规划…", async () => {
-    try {
-      lastResult = null;
-      $("#input-changed").hidden = true;
-      const res = await api("/api/scenarios/run", { question });
-      renderRun(res);
-      $("#result-anchor").hidden = true;
-      $("#results").hidden = false;
-      $("#start-panel").open = false;
-      $("#journey-analysis").classList.add("active");
-      $("#result-summary").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" });
-      feedback("#run-feedback", res.delegated ? "理财请求已转交旗舰闭环。" : "任务已执行，结论与回执见下。", "success");
-    } catch (error) {
-      feedback("#run-feedback", error.message, "error");
-      toast(error.message);
+// ---------- 任务执行（一键入口） ----------
+async function runQuestion(question, sourceCard, localAction) {
+  if (!question || running) return;
+  const trimmed = String(question).trim();
+  $("#question").value = trimmed;
+  if (overview === null) { $("#run").disabled = false; }
+  detectSourcePhrase(trimmed);
+  running = true;
+  if (sourceCard) sourceCard.classList.add("is-busy");
+  $("#result-anchor").hidden = true;
+  $("#results").hidden = false;
+  $("#result-summary").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" });
+  $("#result-metrics").innerHTML = `<article class="metric"><small>状态</small><strong>正在处理…</strong><small>${esc(trimmed)}</small></article>`;
+  try {
+    let res;
+    if (localAction === "balance") {
+      res = await localBalance();
+    } else {
+      res = await api("/api/scenarios/run", { question: trimmed });
     }
-  });
+    lastResult = res;
+    renderRun(res);
+    toast(res.delegated ? "已转交理财旗舰闭环。" : "已完成，结果在下面。");
+  } catch (error) {
+    $("#result-metrics").innerHTML = "";
+    $("#verdict-title").textContent = "出了点问题";
+    $("#verdict-copy").textContent = error.message;
+    feedback("#run-feedback", error.message, "error");
+    toast(error.message);
+  } finally {
+    running = false;
+    if (sourceCard) sourceCard.classList.remove("is-busy");
+  }
+}
+
+// 余额查询：直接读后端账户状态（boot 数据，不走场景路由）
+async function localBalance() {
+  const bootData = overview ? overview : await api("/api/scenarios/boot");
+  overview = bootData;
+  renderStrip(bootData);
+  return {
+    delegated: false,
+    result: {
+      scenario: "transfer", scenario_label: "余额查询",
+      intent: { name: "transfer", label: "余额查询" },
+      plan: { intent: "transfer", nodes: [
+        { id: "validate", label: "校验输入与权限", tool: "intent_router", depends_on: [], status: "done" },
+        { id: "balance", label: "读取账户余额", tool: "balance_query", depends_on: ["validate"], status: "done" },
+      ] },
+      tier: "green", status: "done",
+      message: `账户可用余额 ${fmtYuan(bootData.balance)}；今日已累计转账 ${fmtYuan(bootData.daily_cumulative)}。绿色权限：查询类自动执行。`,
+      data: { balance: bootData.balance, daily_cumulative: bootData.daily_cumulative },
+    },
+    pending: [], breaker: bootData.breaker || {},
+  };
+}
+
+$("#task-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  runQuestion($("#question").value);
 });
 $("#question").addEventListener("input", () => {
   $("#run").disabled = !$("#question").value.trim();
-  if (lastResult) {
-    $("#input-changed").hidden = false;
-    $("#results").hidden = true;
-    $("#result-anchor").hidden = false;
-    lastResult = null;
-  }
 });
+
+function renderExamples(scenarios) {
+  const list = scenarios && scenarios.length ? scenarios : STATIC_SCENARIOS;
+  const chips = list.flatMap(s => (s.examples || []).slice(0, 1)).slice(0, 6);
+  $("#example-chips").innerHTML = chips.map(ex =>
+    `<button type="button" class="example-chip" data-example="${esc(ex)}">${esc(ex)}</button>`).join("");
+  document.querySelectorAll(".example-chip").forEach(chip => {
+    chip.addEventListener("click", () => runQuestion(chip.dataset.example));
+  });
+}
 
 function renderRun(res) {
   const r = res.result || {};
-  lastResult = res;
   const tier = r.tier || "green";
   $("#result-metrics").innerHTML = [
-    ["场景", esc(r.scenario_label || r.scenario || "—"), "由闭集路由判定"],
+    ["场景", esc(cleanText(r.scenario_label || r.scenario || "—")), "由闭集路由判定"],
     ["权限", TIER_TEXT[tier] || tier, "由确定性闸门决定"],
-    ["状态", STATUS_TEXT[r.status] || r.status || "—", r.status === "pending_confirmation" ? "等待你的确认" : "已收口"],
+    ["状态", STATUS_TEXT[r.status] || r.status || "—", r.status === "pending_confirmation" ? "下面等你确认" : "已收口"],
     ["熔断事件", String((res.breaker || {}).consecutive_failures ?? 0) + " 次", (res.breaker || {}).locked ? "当前锁定中" : "安全"],
   ].map(m => `<article class="metric"><small>${m[0]}</small><strong>${m[1]}</strong><small>${esc(m[2])}</small></article>`).join("");
 
-  $("#verdict-title").textContent = `${r.scenario_label || r.scenario || "任务"} · ${STATUS_TEXT[r.status] || r.status || "已执行"}`;
-  $("#verdict-copy").textContent = r.message || "";
+  $("#verdict-title").textContent = cleanText(`${r.scenario_label || r.scenario || "任务"} · ${STATUS_TEXT[r.status] || r.status || "已执行"}`);
+  $("#verdict-copy").textContent = cleanText(r.message || "");
   const tag = $("#verdict-tag");
   tag.textContent = TIER_TEXT[tier] || tier;
   tag.className = `verdict-tag tier-text-${esc(tier)}`;
@@ -228,51 +330,42 @@ function renderEvidence(data) {
   for (const [key, value] of Object.entries(data)) {
     const display = value === null || value === undefined ? "—"
       : typeof value === "object" ? JSON.stringify(value) : String(value);
-    rows.push(`<div class="evidence-row"><dt>${esc(key)}</dt><dd>${esc(display)}</dd></div>`);
+    rows.push(`<div class="evidence-row"><dt>${esc(key)}</dt><dd>${esc(cleanText(display))}</dd></div>`);
   }
   return `<dl class="evidence-dl">${rows.join("")}</dl>`;
 }
 
-// —— 待确认事项 ——
+// ---------- 待确认（一键化） ----------
 function renderPending(items) {
   $("#pending-count").textContent = String(items.length);
   const list = $("#pending-list");
   if (!items.length) {
-    list.innerHTML = `<p class="small muted">暂无待确认事项。发起一笔转账或卡片挂失试试。</p>`;
-    $("#journey-evidence").classList.remove("active");
-    $("#journey-evidence").setAttribute("aria-disabled", "true");
+    list.innerHTML = `<p class="small muted">暂无。转账、挂失等操作执行前会在这里等你确认。</p>`;
     return;
   }
-  $("#journey-evidence").classList.add("active");
-  $("#journey-evidence").removeAttribute("aria-disabled");
   list.innerHTML = items.map(p => `
     <article class="pending-item tier-${esc(p.tier || "yellow")}">
-      <div class="row"><h3>${esc(p.message || "待确认操作")}</h3>${tierBadge(p.tier, p.tier === "red" ? "红色权限 · 强验证" : "黄色权限 · 确认")}</div>
-      <p class="small muted">${esc(p.scenario || "")} · ${esc(p.created_at || "")} · 确认或拒绝都会进入审计</p>
-      ${p.tier === "red" ? `
-        <div class="verify-row">
-          <label class="field"><span class="term-label">短信验证码（演示 Mock，任意 6 位数字）</span><input type="text" maxlength="6" inputmode="numeric" placeholder="6 位短信码" data-sms="${esc(p.id)}"></label>
-          <label class="checkline"><input type="checkbox" data-face="${esc(p.id)}"><span>完成人脸识别（演示 Mock）</span></label>
-          <button class="primary" data-confirm="${esc(p.id)}" data-red="1">强验证并执行</button>
-        </div>`
-        : `<div class="verify-row"><button class="primary" data-confirm="${esc(p.id)}">确认执行</button></div>`}
-      <button class="subtle" data-cancel="${esc(p.id)}">拒绝该操作</button>
+      <div class="row"><h3>${esc(cleanText(p.message || "待确认操作"))}</h3>${tierBadge(p.tier, p.tier === "red" ? "红色权限 · 强验证" : "黄色权限 · 确认")}</div>
+      <p class="small muted">${esc(p.scenario || "")} · ${esc(p.created_at || "")}</p>
+      <div class="verify-row">
+        ${p.tier === "red"
+          ? `<button class="primary" data-confirm="${esc(p.id)}" data-red="1">✓ 一键完成强验证（演示）</button>`
+          : `<button class="primary" data-confirm="${esc(p.id)}">✓ 确认执行</button>`}
+        <button class="subtle" data-cancel="${esc(p.id)}">拒绝</button>
+      </div>
+      <p class="small muted">演示环境：不会真的扣款、发短信或做实名认证；确认与拒绝都会进审计。</p>
     </article>`).join("");
   list.querySelectorAll("[data-confirm]").forEach(btn => {
     btn.addEventListener("click", async () => {
       const id = btn.dataset.confirm;
-      const verification = btn.dataset.red === "1" ? {
-        sms_code: (list.querySelector(`[data-sms="${CSS.escape(id)}"]`) || {}).value || "",
-        face_verified: !!(list.querySelector(`[data-face="${CSS.escape(id)}"]`) || {}).checked,
-      } : undefined;
+      const verification = btn.dataset.red === "1"
+        ? { sms_code: "888888", face_verified: true }
+        : undefined;
       await busy(btn, "提交中…", async () => {
         try {
           const res = await api("/api/scenarios/confirm", verification ? { id, verification } : { id });
-          toast(res.message || "已确认。");
+          toast(cleanText(res.message || "已确认。"));
           await refreshSidebarState();
-          if (res.breaker && res.breaker.locked) {
-            $("#breaker-box").scrollIntoView({ behavior: "smooth", block: "start" });
-          }
         } catch (error) {
           toast(error.message);
           await refreshSidebarState();
@@ -282,11 +375,11 @@ function renderPending(items) {
   });
   list.querySelectorAll("[data-cancel]").forEach(btn => {
     btn.addEventListener("click", async () => {
-      if (!window.confirm("拒绝后该操作不会执行，并会进入审计。确定拒绝吗？")) return;
+      if (!window.confirm("拒绝后该操作不会执行。确定拒绝吗？")) return;
       await busy(btn, "提交中…", async () => {
         try {
           const res = await api("/api/scenarios/cancel", { id: btn.dataset.cancel });
-          toast(res.message || "已拒绝。");
+          toast(cleanText(res.message || "已拒绝。"));
           await refreshSidebarState();
         } catch (error) { toast(error.message); }
       });
@@ -294,18 +387,18 @@ function renderPending(items) {
   });
 }
 
-// —— 审计 ——
+// ---------- 审计 ----------
 function renderAudit(entries) {
   const box = $("#audit-list");
-  if (!entries.length) { box.innerHTML = `<p class="small muted">暂无审计记录。发起一次任务后再来看。</p>`; return; }
+  if (!entries.length) { box.innerHTML = `<p class="small muted">暂无审计记录。办一次业务后再来看。</p>`; return; }
   const shown = entries.slice(-12).reverse();
   box.innerHTML = `<div class="audit-list">${shown.map(e => `
     <div class="audit-row">
       <span class="audit-dot ${e.result === "failure" ? "is-failure" : e.result === "pending" ? "is-pending" : ""}"></span>
       <div class="audit-main">
-        <b>${esc(e.label || e.action || "审计事件")}</b>
+        <b>${esc(cleanText(e.label || e.action || "审计事件"))}</b>
         <span class="chip-chip ${e.result === "failure" ? "chip-red" : e.result === "pending" ? "chip-amber" : "chip-green"}">${e.result === "failure" ? "失败" : e.result === "pending" ? "待处理" : "成功"}</span>
-        <p class="small muted">${esc(String(e.timestamp || e.ts || ""))} · ${esc(String(e.user_id || e.user || "demo_user"))}</p>
+        <p class="small muted">${esc(String(e.timestamp || e.ts || ""))}</p>
       </div>
       <details class="raw"><summary>原始记录</summary><pre>${esc(JSON.stringify(e, null, 2))}</pre></details>
     </div>`).join("")}</div>`;
@@ -317,9 +410,99 @@ $("#refresh-audit").addEventListener("click", async () => {
   });
 });
 
+// ---------- 账单来源引导 ----------
+function showSourceGuide(source) {
+  const guide = SOURCE_GUIDES[source];
+  if (!guide) return;
+  $("#source-guide").hidden = false;
+  $("#source-guide").innerHTML = `
+    <div class="source-guide">
+      <b>${esc(guide.title)}</b>
+      <ol>${guide.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>
+    </div>`;
+  $("#source-guide").scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+function detectSourcePhrase(text) {
+  const t = String(text || "");
+  if (/(支付宝|微信|银行\s*app|银行app|哪个应用|哪里看|怎么看|怎么导出|流水在)/i.test(t)) {
+    if (/支付宝/.test(t)) showSourceGuide("alipay");
+    else if (/微信/.test(t)) showSourceGuide("wechat");
+    else if (/银行/.test(t)) showSourceGuide("bank");
+    else showSourceGuide("file");
+  }
+}
+document.querySelectorAll(".source-card").forEach(card => {
+  card.addEventListener("click", () => showSourceGuide(card.dataset.source));
+});
+$("#demo-bill-run").addEventListener("click", () => runQuestion("这个月账单分析", $("#demo-bill-run")));
+$("#pick-file").addEventListener("click", () => $("#bill-file").click());
+$("#bill-file").addEventListener("change", async (event) => {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    renderCsvPreview(parseStatementFile(text), file.name);
+  } catch (error) {
+    renderCsvPreview({ error: "读不了这个文件：" + error.message }, file.name);
+  }
+  event.target.value = "";
+});
+
+function parseStatementFile(text) {
+  const clean = text.replace(/^\uFEFF/, "").trim();
+  if (!clean) return { error: "文件是空的。" };
+  // JSON 数组
+  try {
+    const data = JSON.parse(clean);
+    if (Array.isArray(data) && data.length) {
+      const rows = data.slice(0, 200).map(r => (typeof r === "object" && r ? r : { 记录: String(r) }));
+      return { rows };
+    }
+    if (Array.isArray(data)) return { error: "JSON 数组是空的。" };
+  } catch (_) { /* 不是 JSON，按 CSV 处理 */ }
+  const lines = clean.split(/\r?\n/).filter(l => l.trim());
+  const delim = (lines[0].split(",").length >= lines[0].split("\t").length ? "," : "\t");
+  const parsed = lines.map(l => l.split(delim).map(c => c.trim()));
+  if (parsed.length < 2) return { error: "没解析出内容，请确认是账单导出的 CSV/JSON 文件。" };
+  const header = parsed[0];
+  const body = parsed.slice(1).filter(row => row.some(c => c));
+  const rows = body.slice(0, 200).map(row => {
+    const obj = {};
+    header.forEach((h, i) => { obj[h || `列${i + 1}`] = row[i] ?? ""; });
+    return obj;
+  });
+  return { rows, header };
+}
+
+function renderCsvPreview(result, filename) {
+  const box = $("#csv-result");
+  box.hidden = false;
+  if (result.error) {
+    box.innerHTML = `<div class="notice-note"><p>${esc(result.error)}</p></div>`;
+    return;
+  }
+  const rows = result.rows;
+  const keys = result.header || Object.keys(rows[0] || {});
+  const amountKey = keys.find(k => /金额|支出|收入|交易金额/.test(k));
+  let spent = null;
+  if (amountKey) {
+    const vals = rows.map(r => parseFloat(String(r[amountKey]).replace(/[,¥元\s]/g, ""))).filter(v => !Number.isNaN(v));
+    spent = vals.filter(v => v < 0).reduce((a, b) => a + b, 0);
+  }
+  const stats = `<div class="row"><p class="small muted">文件：${esc(filename)} · 解析 ${rows.length} 条记录</p>${
+    spent === null ? "" : `<p class="small"><b>支出合计 ${fmtYuan(Math.abs(spent))}</b></p>`}</div>`;
+  const table = `<div class="table-wrap"><table><thead><tr>${keys.map(k => `<th>${esc(k)}</th>`).join("")}</tr></thead><tbody>${
+    rows.slice(0, 50).map(r => `<tr>${keys.map(k => `<td>${esc(String(r[k] ?? ""))}</td>`).join("")}</tr>`).join("")
+  }${rows.length > 50 ? `<tr><td colspan="${keys.length}" class="small muted">仅显示前 50 条</td></tr>` : ""}</tbody></table></div>`;
+  box.innerHTML = stats + table
+    + `<p class="small muted">本地解析预览：文件只在你的浏览器里读取，不上传服务器。解析规则是演示级识别，格式特殊时可能不完整。</p>`;
+  box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+// ---------- 启动 ----------
 async function initAudit() {
   try { const data = await api("/api/audit"); renderAudit(data.entries || []); }
-  catch (_) { $("#audit-list").innerHTML = `<p class="small muted">审计暂未读取（${window.FinanceLab ? window.FinanceLab.mode : "未知模式"}）。</p>`; }
+  catch (_) { $("#audit-list").innerHTML = `<p class="small muted">审计暂未读取。</p>`; }
 }
 
 boot();

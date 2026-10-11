@@ -117,6 +117,36 @@ body.banking-product .compact-detail summary { font-size:12px; }
 .catalog-lead { grid-template-columns:1fr; margin-bottom:16px; }
 .catalog-lead .banking-choice { min-height:0; border-top:2px solid #ff6a00; }
 
+/* 一键任务 */
+.quick-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; margin-top:14px; }
+.quick-card { display:flex; flex-direction:column; align-items:flex-start; gap:10px; padding:18px 16px; font:inherit; text-align:left; color:var(--ink); background:rgba(25,23,21,.66); border:1px solid var(--line); border-radius:12px; cursor:pointer; transition:border-color .18s,transform .18s,box-shadow .18s; }
+.quick-card:hover { border-color:var(--green); transform:translateY(-2px); box-shadow:0 10px 26px rgba(0,0,0,.35); }
+.quick-card:active { transform:translateY(0); }
+.quick-card .quick-icon { font-size:22px; }
+.quick-card b { font-size:14px; font-weight:600; }
+.quick-card.is-busy { border-color:var(--green); }
+.quick-card.is-busy::after { content:"处理中…"; font-size:10px; color:var(--muted); animation:flPulse 1s ease infinite alternate; }
+@keyframes flPulse { from { opacity:.5; } to { opacity:1; } }
+
+/* 账单来源 */
+.source-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; margin-top:14px; }
+.source-card { display:flex; flex-direction:column; align-items:flex-start; gap:6px; padding:16px; font:inherit; text-align:left; color:var(--ink); background:rgba(25,23,21,.66); border:1px solid var(--line); border-radius:12px; cursor:pointer; transition:border-color .18s,transform .18s; }
+.source-card:hover { border-color:var(--green); transform:translateY(-2px); }
+.source-card b { font-size:14px; }
+.source-card small { font-size:10px; color:var(--muted); }
+.source-guide { margin-top:14px; padding:16px 18px; border-radius:11px; background:rgba(25,23,21,.66); border:1px solid rgba(255,139,56,.4); }
+.source-guide b { font-size:14px; color:#ffc9a0; }
+.source-guide ol { margin:10px 0 0; padding-left:20px; display:flex; flex-direction:column; gap:8px; }
+.source-guide li { font-size:13px; line-height:1.6; }
+#csv-result { margin-top:14px; }
+#csv-result .table-wrap { max-height:320px; overflow:auto; }
+#csv-result table { width:100%; border-collapse:collapse; font-size:12px; }
+#csv-result th, #csv-result td { text-align:left; padding:7px 10px; border-bottom:1px solid rgba(232,216,195,.08); white-space:nowrap; }
+
+/* 场景卡可点击 */
+.scenario-card { font:inherit; text-align:left; color:var(--ink); cursor:pointer; transition:border-color .18s,transform .18s; }
+.scenario-card:hover { border-color:var(--green); transform:translateY(-2px); }
+
 /* 移动端 */
 @media (max-width:650px) {
   body.banking-product .panel { padding:18px; }
@@ -128,4 +158,5 @@ body.banking-product .compact-detail summary { font-size:12px; }
   .pending-item .row { flex-direction:column; }
   .nl-box textarea { font-size:14px; }
   .example-chip { font-size:10px; }
+  .quick-grid, .source-grid { grid-template-columns:repeat(2,1fr); }
 }
