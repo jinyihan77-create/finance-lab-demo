@@ -77,6 +77,14 @@ const SOURCE_GUIDES = {
 let overview = null;
 let lastResult = null;
 let running = false;
+const IS_PAGES = /github\.io$/.test(location.hostname);
+
+// 公开 Pages 版：无真后端、无同源代理——隐藏本地专属入口，改外链
+if (IS_PAGES) {
+  document.querySelectorAll('.sidebar a[href="/compare"], .sidebar a[href="/evidence"]').forEach(a => a.remove());
+  const notice = $("#backend-notice");
+  if (notice) notice.innerHTML = `<p><b>这是公开演示版。</b>银行六场景与理财旗舰在公开环境为演示模式（数据与结论均已标注）；现场验收请使用本地真链路版（团队后端 + 演示服务）。</p>`;
+}
 
 // ---------- 视图切换（顶部导航栏） ----------
 function switchView(name) {
@@ -84,6 +92,14 @@ function switchView(name) {
   document.querySelectorAll(".console-tab").forEach(t => t.classList.toggle("is-active", t.dataset.viewBtn === name));
   if (name === "brief") loadBrief();
   if (name === "risk") {
+    if (IS_PAGES) {
+      // 公开版没有同源代理：展示外链卡片，不加载 iframe
+      const fallback = $("#risk-fallback");
+      const wrap = document.querySelector(".risk-frame-wrap");
+      if (fallback) fallback.hidden = false;
+      if (wrap) wrap.style.display = "none";
+      return;
+    }
     const frame = $("#risk-frame");
     if (frame && !frame.dataset.loaded) {
       frame.dataset.loaded = "1";
