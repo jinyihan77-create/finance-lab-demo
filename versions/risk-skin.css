@@ -1,5 +1,5 @@
 /* 风控工作台统一皮肤：对齐 Finance Lab 深色玻璃设计语言（同源 iframe 注入） */
-html, body { background:#0a0a0a !important; color:#f7f7f5 !important; font-family:Inter,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif !important; }
+html, body { background:#0a0a0a !important; color:#f7f7f5 !important; font-family:"PingFang SC","HarmonyOS Sans SC","MiSans","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif !important; }
 header { background:rgba(20,18,16,.92) !important; color:#f7f7f5 !important; border-bottom:1px solid #2a2a2e !important; box-shadow:none !important; }
 header .brand, header .mode { color:#f7f7f5 !important; }
 header .mode { color:#ffb865 !important; }
@@ -17,7 +17,7 @@ input, select, textarea { background:#101010 !important; color:#f7f7f5 !importan
 input:focus, select:focus, textarea:focus { border-color:#ff8b38 !important; outline:none !important; box-shadow:0 0 0 3px rgba(255,139,56,.14) !important; }
 table { background:#141414 !important; border-color:#2a2a2e !important; }
 th, td { color:#f7f7f5 !important; border-color:#2a2a2e !important; }
-pre, code, .mono { background:#0e0d0c !important; color:#ffd9a3 !important; border:1px solid #2a2a2e !important; border-radius:8px !important; }
+pre, code, .mono { background:#0e0d0c !important; color:#f2d9ae !important; border:1px solid #2a2a2e !important; border-radius:8px !important; }
 .flow li { background:rgba(25,23,21,.7) !important; border:1px solid #2a2a2e !important; border-radius:999px !important; color:#c9c0b6 !important; }
 .flow li.active { border-color:#ff8b38 !important; color:#ffb865 !important; }
 .status, #notice { background:rgba(255,139,56,.12) !important; border:1px solid rgba(255,139,56,.4) !important; color:#ffc9a0 !important; border-radius:8px !important; }

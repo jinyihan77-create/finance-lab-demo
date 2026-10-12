@@ -1,21 +1,22 @@
-/* Inert design values: no existing component consumes these until migrated. */
+/* 全局设计令牌：对齐 GPT 第三版（v2）的字体与色彩体系。
+   字体：中文优先栈，比 Inter 在中文界面的渲染更清晰。 */
 :root {
   --canvas: #0b0a09;
   --archive-surface: #191715;
   --decor-ink: #b8ada0;
-  --text-primary: #f3eee8;
-  --text-secondary: #c9c0b6;
+  --text-primary: #f8f3eb;
+  --text-secondary: #cfc4b5;
   --text-on-signal: #17100a;
-  --signal-orange: #ff914a;
+  --signal-orange: #ed7627;
   --text-body: 16px;
   --text-title: clamp(24px, 2.4vw, 34px);
   --text-display: clamp(36px, 4.5vw, 64px);
   --text-meta: 13px;
   --radius-panel: 18px;
   --radius-control: 8px;
-  --glass-tint: rgb(25 23 21 / 76%);
+  --glass-tint: rgb(27 24 20 / 78%);
   --glass-blur: 18px;
-  --glass-border: rgb(232 216 195 / 18%);
+  --glass-border: rgb(255 237 210 / 12%);
   --motion-duration: 320ms;
   --motion-ease: cubic-bezier(.22,1,.36,1);
   --motion-distance: 12px;
@@ -25,4 +26,14 @@
   --brand-orange: #ed7627;
   --brand-highlight: #ffe2ac;
   --brand-shadow: #71300e;
+}
+/* 全站字体：中文优先（覆盖各产品类名的特异性） */
+body,
+body.landing-product,
+body.investment-product,
+body.merchant-product,
+body.home-product,
+body.banking-product {
+  font-family: "PingFang SC", "HarmonyOS Sans SC", "MiSans", "Noto Sans SC",
+    "Microsoft YaHei", system-ui, sans-serif;
 }
