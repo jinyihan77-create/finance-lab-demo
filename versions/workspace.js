@@ -472,7 +472,6 @@ async function renderWealth(data) {
     ["场景", "理财旗舰", "组合体检 → 风控闸门 → 情景推演"],
     ["建议", `${rec.action || "—"} ${rec.name || rec.symbol || ""} ${rec.quantity ?? ""} 股`, rec.amount ? `约 ¥${Number(rec.amount).toLocaleString("zh-CN")}` : ""],
     ["权限", TIER_TEXT[tier] || tier, data.queued ? "待确认页等你点头" : "已自动执行"],
-    ["耗时", String(data.elapsed_ms ?? "—") + " ms", data.engine || "规则引擎"],
   ].map(m => `<article class="metric"><small>${m[0]}</small><strong>${esc(m[1])}</strong><small>${esc(cleanText(m[2]))}</small></article>`).join("");
 
   $("#verdict-title").textContent = cleanText(`${rec.action || "建议"} ${rec.name || rec.symbol || ""} ${rec.quantity ?? ""} 股${data.queued ? " · 等待你确认" : " · 已执行"}`);
