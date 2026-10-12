@@ -392,6 +392,8 @@ async function runQuestion(question, sourceCard, localAction) {
     ...(bankingPendings || []).map(p => p.id),
     ...wealthApprovals.map(a => a.id),
   ]);
+  inlineReceipt = null;
+  $("#inline-pending") && ($("#inline-pending").innerHTML = "");
   running = true;
   if (sourceCard) sourceCard.classList.add("is-busy");
   lastResult = null;
@@ -649,12 +651,19 @@ async function renderWealth(data) {
 // ---------- 待确认（一键化，含理财旗舰审批） ----------
 let wealthApprovals = [];
 let knownPendingIds = new Set();
+let inlineReceipt = null;
+
+function showInlineReceipt(message) {
+  inlineReceipt = message;
+  const box = $("#inline-pending");
+  if (box) box.innerHTML = `<div class="inline-receipt">✓ ${esc(cleanText(message))}</div>`;
+}
 
 async function confirmItem(id, type, red, sourceBtn) {
   if (String(id).startsWith("demo_")) {
     demoPending = demoPending.filter(p => p.id !== id);
     renderPending(bankingPendings);
-    renderInlinePending(bankingPendings);
+    showInlineReceipt("已执行（公开演示数据，未发生真实资金变动）。");
     toast("已执行（公开演示数据，未发生真实资金变动）。");
     return;
   }
@@ -670,13 +679,14 @@ async function confirmItem(id, type, red, sourceBtn) {
         const verification = red ? { sms_code: "888888", face_verified: true } : undefined;
         res = await api("/api/scenarios/confirm", verification ? { id, verification } : { id });
       }
-      toast(cleanText(res.message || "已确认。"));
+      const msg = cleanText(res.message || "已确认。");
+      showInlineReceipt(msg);
+      toast(msg);
       await refreshSidebarState();
-      renderInlinePending(bankingPendings);
     } catch (error) {
+      showInlineReceipt("执行失败：" + error.message);
       toast(error.message);
       await refreshSidebarState();
-      renderInlinePending(bankingPendings);
     }
   });
 }
@@ -685,7 +695,7 @@ async function cancelItem(id, type, sourceBtn) {
   if (String(id).startsWith("demo_")) {
     demoPending = demoPending.filter(p => p.id !== id);
     renderPending(bankingPendings);
-    renderInlinePending(bankingPendings);
+    showInlineReceipt("已拒绝（公开演示数据）。");
     toast("已拒绝（公开演示数据）。");
     return;
   }
@@ -698,9 +708,10 @@ async function cancelItem(id, type, sourceBtn) {
       } else {
         res = await api("/api/scenarios/cancel", { id });
       }
-      toast(cleanText(res.message || "已拒绝。"));
+      const msg = cleanText(res.message || "已拒绝。");
+      showInlineReceipt(msg);
+      toast(msg);
       await refreshSidebarState();
-      renderInlinePending(bankingPendings);
     } catch (error) { toast(error.message); }
   });
 }
@@ -718,7 +729,7 @@ function pendingItemHtml(p) {
     </article>`;
 }
 
-// 结果页就地确认：只显示本次任务新产生的待办
+// 结果页就地确认：先显示本次任务新产生的待办；确认/拒绝后原位显示回执
 function renderInlinePending() {
   const box = $("#inline-pending");
   if (!box) return;
@@ -730,6 +741,10 @@ function renderInlinePending() {
       message: `${a.action || "操作"}：${a.name || a.symbol || ""} ${a.quantity ?? ""} 股 @ ¥${Number(a.price ?? 0).toFixed(2)}（约 ¥${Number(a.amount ?? 0).toLocaleString("zh-CN")}）`,
     }));
   const all = [...newItems, ...newWealth];
+  if (inlineReceipt) {
+    showInlineReceipt(inlineReceipt);
+    return;
+  }
   if (!all.length) { box.innerHTML = ""; return; }
   box.innerHTML = `<div class="inline-pending-box">${all.map(pendingItemHtml).join("")}</div>`;
   box.querySelectorAll("[data-confirm]").forEach(btn => {
