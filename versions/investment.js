@@ -106,10 +106,6 @@ function renderReview(data) {
     (data.next_actions || []).length ? `<div class="evidence-row"><dt>下一步</dt><dd>${esc(data.next_actions.join("；"))}</dd></div>` : "",
     `<div class="evidence-row"><dt>说明</dt><dd>${esc((whatif.caveats || []).join("；") || "—")}</dd></div>`,
   ].join("")}</dl>`;
-  $("#evidence").textContent = JSON.stringify({
-    recommendation: data.recommendation, gate: data.gate, whatif: data.whatif,
-    intent: data.intent, approval_id: data.approval_id, queued: data.queued, engine: data.engine,
-  }, null, 2);
 }
 
 // ---------- 待确认（理财审批 /api/decide） ----------

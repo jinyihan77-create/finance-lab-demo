@@ -165,6 +165,35 @@ body.banking-product .compact-detail summary { font-size:12px; }
 .risk-frame-wrap { border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#0e0d0c; }
 .risk-frame-wrap iframe { display:block; width:100%; height:76vh; min-height:560px; border:0; }
 
+/* 账单支出记录（精简视图） */
+.bill-summary { display:flex; flex-direction:column; gap:14px; }
+.bill-total { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; }
+.bill-total > div { background:rgba(25,23,21,.66); border:1px solid var(--line); border-radius:10px; padding:14px 16px; display:flex; flex-direction:column; gap:4px; }
+.bill-total small { color:var(--muted); font-size:11px; }
+.bill-total strong { font-size:22px; color:var(--ink); }
+.bill-section h3 { font-size:13px; margin:2px 0 10px; color:var(--ink); }
+.bill-cat-row { display:flex; align-items:center; gap:10px; padding:6px 0; font-size:13px; }
+.bill-cat-name { width:88px; flex-shrink:0; }
+.bill-cat-bar { flex:1; height:8px; background:#1d1b18; border-radius:99px; overflow:hidden; }
+.bill-cat-bar i { display:block; height:100%; background:linear-gradient(90deg,#ffb865,#ed7627); border-radius:99px; }
+.bill-cat-row b { width:110px; text-align:right; white-space:nowrap; }
+.bill-cat-row small { width:38px; text-align:right; color:var(--muted); }
+.bill-merchants { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; }
+.bill-merchants li { display:flex; align-items:center; gap:12px; padding:9px 4px; border-bottom:1px solid rgba(232,216,195,.08); font-size:13px; }
+.bill-merchants .bill-rank { width:22px; height:22px; flex-shrink:0; border-radius:50%; background:rgba(255,139,56,.16); color:#ffb865; font-size:11px; display:flex; align-items:center; justify-content:center; }
+.bill-merchants li > span:not(.bill-rank) { flex:1; }
+.bill-merchants b { white-space:nowrap; }
+.bill-anomalies { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+.bill-anomalies li { display:flex; align-items:flex-start; gap:9px; padding:10px 12px; border-radius:9px; font-size:13px; line-height:1.6; background:rgba(25,23,21,.55); border:1px solid var(--line); }
+.bill-anomalies .sev-badge { flex-shrink:0; font-size:10px; padding:2px 8px; border-radius:999px; white-space:nowrap; margin-top:2px; }
+.bill-anomalies li.sev-warning { border-color:rgba(255,179,71,.4); }
+.bill-anomalies li.sev-warning .sev-badge { color:#ffd9a3; background:rgba(158,103,31,.25); }
+.bill-anomalies li.sev-info .sev-badge { color:#a9c4ff; background:rgba(60,90,160,.25); }
+.bill-anomalies li.sev-critical { border-color:rgba(255,141,141,.5); }
+.bill-anomalies li.sev-critical .sev-badge { color:#ffc2c2; background:rgba(146,52,52,.28); }
+.bill-insights { display:flex; flex-direction:column; gap:8px; }
+.bill-insights p { margin:0; padding:11px 14px; font-size:13px; line-height:1.7; background:rgba(255,139,56,.08); border:1px solid rgba(255,139,56,.3); border-radius:9px; }
+
 /* 移动端 */
 @media (max-width:650px) {
   body.banking-product .panel { padding:18px; }

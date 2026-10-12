@@ -387,10 +387,7 @@ function renderRun(res) {
     ? "该请求在入口被拦截，未进入任何场景执行。"
     : `意图：${intent.label || intent.name || "—"}${intent.question ? "（原话已保留在审计中）" : ""}`;
 
-  $("#evidence-data").innerHTML = renderEvidence(r.data);
-  $("#evidence").textContent = JSON.stringify({
-    scenario: r.scenario, intent: r.intent, plan: r.plan, tier: r.tier, status: r.status, data: r.data,
-  }, null, 2);
+  $("#evidence-data").innerHTML = r.scenario === "bill" ? renderBillEvidence(r.data) : renderEvidence(r.data);
 
   bankingPendings = res.pending || [];
   renderPending(bankingPendings);
@@ -399,13 +396,67 @@ function renderRun(res) {
 
 function renderEvidence(data) {
   if (!data || !Object.keys(data).length) return `<p class="small muted">本任务没有附加业务数据（如越界或拦截请求）。</p>`;
+  const KEY_LABELS = {
+    period: "期间", total_spend: "支出合计", transaction_count: "笔数", by_category: "分类支出",
+    top_merchants: "主要商户", anomalies: "异常提示", insights: "洞察", generated_at: "生成时间",
+    balance: "可用余额", daily_cumulative: "今日累计转账", cards: "卡片", subscriptions: "订阅",
+    status: "状态", operation: "操作", card: "卡片信息", gate_checks: "闸门检查", new_limit: "新额度",
+    plan: "计划", plan_id: "计划编号", message: "说明", contacts: "通讯录", request: "请求内容",
+    target: "目标", amount: "金额", payee: "收款人", memo: "备注", payee_ok: "收款人核验",
+    balance_sufficient: "余额充足", within_limit: "限额内", remaining_limit: "剩余限额",
+    aa_items: "AA 分账", scheduled_at: "预约时间",
+  };
   const rows = [];
   for (const [key, value] of Object.entries(data)) {
     const display = value === null || value === undefined ? "—"
       : typeof value === "object" ? JSON.stringify(value) : String(value);
-    rows.push(`<div class="evidence-row"><dt>${esc(key)}</dt><dd>${esc(cleanText(display))}</dd></div>`);
+    rows.push(`<div class="evidence-row"><dt>${esc(KEY_LABELS[key] || key)}</dt><dd>${esc(cleanText(display))}</dd></div>`);
   }
   return `<dl class="evidence-dl">${rows.join("")}</dl>`;
+}
+
+// 账单分析：精简支出记录视图（不铺原始字段名、不展示代码）
+function renderBillEvidence(data) {
+  data = data || {};
+  const fmt = (v) => new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY" }).format(Number(v || 0));
+  const total = Number(data.total_spend || 0);
+  const cats = Object.entries(data.by_category || {}).sort((a, b) => b[1] - a[1]);
+  const merchants = (data.top_merchants || []).slice(0, 8);
+  const anomalies = data.anomalies || [];
+  const insights = data.insights || [];
+  const sevText = { warning: "需留意", info: "提示", critical: "重要" };
+
+  const catRows = cats.map(([name, amount]) => {
+    const pct = total > 0 ? Math.round((Number(amount) / total) * 100) : 0;
+    return `<div class="bill-cat-row"><span class="bill-cat-name">${esc(cleanText(name))}</span><span class="bill-cat-bar"><i style="width:${Math.max(4, pct)}%"></i></span><b>${fmt(amount)}</b><small>${pct}%</small></div>`;
+  }).join("");
+
+  const merchantRows = merchants.length
+    ? `<ol class="bill-merchants">${merchants.map((m, i) =>
+      `<li><span class="bill-rank">${i + 1}</span><span>${esc(cleanText(m.merchant || "—"))}</span><b>${fmt(m.amount)}</b></li>`).join("")}</ol>`
+    : `<p class="small muted">暂无商户明细。</p>`;
+
+  const anomalyRows = anomalies.length
+    ? `<ul class="bill-anomalies">${anomalies.map(a =>
+      `<li class="sev-${esc(a.severity || "info")}"><span class="sev-badge">${esc(sevText[a.severity] || "提示")}</span>${esc(cleanText(a.detail || ""))}</li>`).join("")}</ul>`
+    : `<p class="small muted">本期没有标记异常的交易。</p>`;
+
+  const insightLines = insights.length
+    ? `<div class="bill-insights">${insights.map(t => `<p>${esc(cleanText(t))}</p>`).join("")}</div>`
+    : "";
+
+  return `
+    <div class="bill-summary">
+      <div class="bill-total">
+        <div><small>本期支出合计</small><strong>${fmt(total)}</strong></div>
+        <div><small>期间</small><strong>${esc(data.period || "—")}</strong></div>
+        <div><small>笔数</small><strong>${Number(data.transaction_count || 0)} 笔</strong></div>
+      </div>
+      <div class="bill-section"><h3>分类支出</h3>${catRows || `<p class="small muted">暂无分类数据。</p>`}</div>
+      <div class="bill-section"><h3>主要支出</h3>${merchantRows}</div>
+      <div class="bill-section"><h3>异常提示</h3>${anomalyRows}</div>
+      ${insightLines}
+    </div>`;
 }
 
 // ---------- 理财旗舰闭环（/api/review + /api/decide） ----------
@@ -459,11 +510,6 @@ async function renderWealth(data) {
     `<div class="evidence-row"><dt>说明</dt><dd>${esc(cleanText((whatif.caveats || []).join("；") || "—"))}</dd></div>`,
   ].join("");
   $("#evidence-data").innerHTML = `<dl class="evidence-dl">${evidenceHtml}</dl>`;
-  $("#evidence").textContent = JSON.stringify({
-    recommendation: data.recommendation, gate: data.gate, whatif: data.whatif,
-    intent: data.intent, reasoning: data.reasoning, approval_id: data.approval_id,
-    queued: data.queued, engine: data.engine, data_tag: data.data_tag,
-  }, null, 2);
 
   renderPending(bankingPendings);
   renderBreaker(data.breaker || {});
