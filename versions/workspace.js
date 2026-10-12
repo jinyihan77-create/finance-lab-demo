@@ -82,6 +82,7 @@ let running = false;
 function switchView(name) {
   document.querySelectorAll(".console-view").forEach(v => v.classList.toggle("is-active", v.dataset.view === name));
   document.querySelectorAll(".console-tab").forEach(t => t.classList.toggle("is-active", t.dataset.viewBtn === name));
+  if (name === "brief") loadBrief();
   window.scrollTo(0, 0);
 }
 document.querySelectorAll("[data-view-btn]").forEach(btn => {
@@ -107,8 +108,10 @@ async function boot() {
     $("#backend-notice").hidden = true;
     $("#run").disabled = false;
     try {
+      await refreshWealthApprovals();
       const pendingData = await api("/api/scenarios/pending");
-      renderPending((pendingData && pendingData.pending) || []);
+      bankingPendings = (pendingData && pendingData.pending) || [];
+      renderPending(bankingPendings);
     } catch (_) { /* 待确认读取失败不影响主体 */ }
   } catch (error) {
     overview = null;
@@ -222,7 +225,9 @@ async function refreshSidebarState() {
     overview = bootData;
     renderStrip(bootData);
     renderBreaker(bootData.breaker || {});
-    renderPending((pendingData && pendingData.pending) || []);
+    await refreshWealthApprovals();
+    bankingPendings = (pendingData && pendingData.pending) || [];
+    renderPending(bankingPendings);
     renderAudit(auditData.entries || []);
   } catch (error) { toast("状态刷新失败：" + error.message); }
 }
@@ -249,12 +254,21 @@ async function runQuestion(question, sourceCard, localAction) {
       res = await api("/api/scenarios/run", { question: trimmed });
     }
     lastResult = res;
-    renderRun(res);
-    if (sourceHint) {
-      toast("已用演示账单跑了一次分析，结果在「结果」页；账单指引就在本页。");
-    } else {
-      toast(res.delegated ? "已转交理财旗舰闭环。" : "已完成，结果在下面。");
+    if (res.delegated) {
+      // 理财请求 → 走你自己的理财旗舰闭环（/api/review），结果完整渲染
+      const wealth = await api("/api/review", { question: trimmed });
+      lastResult = wealth;
+      await renderWealth(wealth);
       switchView("results");
+      toast(wealth.queued ? "理财建议已生成并进入待确认（红色权限）。" : "理财诊断完成，结果在下面。");
+    } else {
+      renderRun(res);
+      if (sourceHint) {
+        toast("已用演示账单跑了一次分析，结果在「结果」页；账单指引就在本页。");
+      } else {
+        toast("已完成，结果在下面。");
+        switchView("results");
+      }
     }
   } catch (error) {
     $("#result-metrics").innerHTML = "";
@@ -343,7 +357,8 @@ function renderRun(res) {
     scenario: r.scenario, intent: r.intent, plan: r.plan, tier: r.tier, status: r.status, data: r.data,
   }, null, 2);
 
-  renderPending(res.pending || []);
+  bankingPendings = res.pending || [];
+  renderPending(bankingPendings);
   renderBreaker(res.breaker || {});
 }
 
@@ -358,37 +373,124 @@ function renderEvidence(data) {
   return `<dl class="evidence-dl">${rows.join("")}</dl>`;
 }
 
-// ---------- 待确认（一键化） ----------
+// ---------- 理财旗舰闭环（/api/review + /api/decide） ----------
+let bankingPendings = [];
+
+async function renderWealth(data) {
+  const rec = data.recommendation || {};
+  const gate = data.gate || {};
+  const whatif = data.whatif || {};
+  const tier = data.queued ? "red" : "green";
+
+  $("#result-metrics").innerHTML = [
+    ["场景", "理财旗舰", "组合体检 → 风控闸门 → 情景推演"],
+    ["建议", `${rec.action || "—"} ${rec.name || rec.symbol || ""} ${rec.quantity ?? ""} 股`, rec.amount ? `约 ¥${Number(rec.amount).toLocaleString("zh-CN")}` : ""],
+    ["权限", TIER_TEXT[tier] || tier, data.queued ? "待确认页等你点头" : "已自动执行"],
+    ["耗时", String(data.elapsed_ms ?? "—") + " ms", data.engine || "规则引擎"],
+  ].map(m => `<article class="metric"><small>${m[0]}</small><strong>${esc(m[1])}</strong><small>${esc(cleanText(m[2]))}</small></article>`).join("");
+
+  $("#verdict-title").textContent = cleanText(`${rec.action || "建议"} ${rec.name || rec.symbol || ""} ${rec.quantity ?? ""} 股${data.queued ? " · 等待你确认" : " · 已执行"}`);
+  $("#verdict-copy").textContent = cleanText(data.assistant_message || rec.reason || "");
+  const tag = $("#verdict-tag");
+  tag.textContent = TIER_TEXT[tier] || tier;
+  tag.className = `verdict-tag tier-text-${esc(tier)}`;
+
+  // 任务 DAG：理财闭环的 plan 节点 + 风控闸门检查
+  const nodes = (data.plan && data.plan.nodes) || [];
+  const gateChecks = (gate.checks || []).map((c, i) => ({
+    id: `gate-${i}`, label: c.name, tool: c.detail || "", status: c.passed ? "done" : "blocked",
+  }));
+  const allNodes = nodes.length ? nodes : gateChecks;
+  $("#dag-list").innerHTML = `<ol class="dag-list">${allNodes.map((n, i) => `
+    <li class="dag-node node-${esc(n.status || "pending")}">
+      <span class="dag-index">${String(i + 1).padStart(2, "0")}</span>
+      <div><b>${esc(n.label)}</b><small class="terminal-label">${esc(n.tool || "")}</small></div>
+      <span class="dag-status">${esc(NODE_STATUS_TEXT[n.status] || n.status || "待执行")}</span>
+    </li>`).join("")}</ol>`;
+  $("#intent-note").textContent = [
+    data.risk_alert || "",
+    whatif.verdict || "",
+    data.data_tag || "",
+  ].filter(Boolean).join(" · ");
+
+  // 证据：建议依据 + 情景推演
+  const evidenceHtml = [
+    `<div class="evidence-row"><dt>操作</dt><dd>${esc(cleanText(JSON.stringify({ action: rec.action, symbol: rec.symbol, name: rec.name, quantity: rec.quantity, price: rec.price })))}</dd></div>`,
+    `<div class="evidence-row"><dt>依据</dt><dd>${esc(cleanText((rec.evidence || []).join("；") || "—"))}</dd></div>`,
+    `<div class="evidence-row"><dt>风险影响</dt><dd>${esc(cleanText(rec.risk_impact || "—"))}</dd></div>`,
+    whatif.verdict ? `<div class="evidence-row"><dt>情景推演</dt><dd>${esc(cleanText(whatif.verdict))}</dd></div>` : "",
+    (whatif.deltas || []).slice(0, 3).map(d => `<div class="evidence-row"><dt>${esc(d.metric || "")}</dt><dd>${esc(String(d.before ?? "—"))} → ${esc(String(d.after ?? "—"))}</dd></div>`).join(""),
+    (data.next_actions || []).length ? `<div class="evidence-row"><dt>下一步</dt><dd>${esc(cleanText(data.next_actions.join("；")))}</dd></div>` : "",
+    `<div class="evidence-row"><dt>说明</dt><dd>${esc(cleanText((whatif.caveats || []).join("；") || "—"))}</dd></div>`,
+  ].join("");
+  $("#evidence-data").innerHTML = `<dl class="evidence-dl">${evidenceHtml}</dl>`;
+  $("#evidence").textContent = JSON.stringify({
+    recommendation: data.recommendation, gate: data.gate, whatif: data.whatif,
+    intent: data.intent, reasoning: data.reasoning, approval_id: data.approval_id,
+    queued: data.queued, engine: data.engine, data_tag: data.data_tag,
+  }, null, 2);
+
+  renderPending(bankingPendings);
+  renderBreaker(data.breaker || {});
+  if (data.queued) {
+    await refreshWealthApprovals();
+    renderPending(bankingPendings);
+  }
+}
+
+// ---------- 待确认（一键化，含理财旗舰审批） ----------
+let wealthApprovals = [];
+
+async function refreshWealthApprovals() {
+  try {
+    const data = await api("/api/approvals");
+    wealthApprovals = (data && data.approvals) || [];
+  } catch (_) { wealthApprovals = []; }
+}
+
 function renderPending(items) {
-  $("#pending-count").textContent = String(items.length);
+  const bankingItems = (items || []).map(p => ({ type: "scenario", ...p }));
+  const wealthItems = wealthApprovals.map(a => ({
+    type: "wealth", id: a.id, scenario: "wealth",
+    tier: "red", created_at: a.created_at,
+    message: `${a.action || "操作"}：${a.name || a.symbol || ""} ${a.quantity ?? ""} 股 @ ¥${Number(a.price ?? 0).toFixed(2)}（约 ¥${Number(a.amount ?? 0).toLocaleString("zh-CN")}）`,
+  }));
+  const all = [...bankingItems, ...wealthItems];
+  $("#pending-count").textContent = String(all.length);
   const badge = $("#pending-badge");
-  if (badge) { badge.hidden = items.length === 0; badge.textContent = String(items.length); }
+  if (badge) { badge.hidden = all.length === 0; badge.textContent = String(all.length); }
   const list = $("#pending-list");
-  if (!items.length) {
-    list.innerHTML = `<p class="small muted">暂无。转账、挂失等操作执行前会在这里等你确认。</p>`;
+  if (!all.length) {
+    list.innerHTML = `<p class="small muted">暂无。转账、挂失、理财申赎等操作执行前会在这里等你确认。</p>`;
     return;
   }
-  list.innerHTML = items.map(p => `
+  list.innerHTML = all.map(p => `
     <article class="pending-item tier-${esc(p.tier || "yellow")}">
       <div class="row"><h3>${esc(cleanText(p.message || "待确认操作"))}</h3>${tierBadge(p.tier, p.tier === "red" ? "红色权限 · 强验证" : "黄色权限 · 确认")}</div>
-      <p class="small muted">${esc(p.scenario || "")} · ${esc(p.created_at || "")}</p>
+      <p class="small muted">${p.type === "wealth" ? "理财旗舰" : esc(p.scenario || "")} · ${esc(p.created_at || "")}</p>
       <div class="verify-row">
-        ${p.tier === "red"
-          ? `<button class="primary" data-confirm="${esc(p.id)}" data-red="1">✓ 一键完成强验证（演示）</button>`
-          : `<button class="primary" data-confirm="${esc(p.id)}">✓ 确认执行</button>`}
-        <button class="subtle" data-cancel="${esc(p.id)}">拒绝</button>
+        <button class="primary" data-confirm="${esc(p.id)}" data-type="${esc(p.type)}" data-red="${p.tier === "red" ? "1" : ""}">✓ ${p.tier === "red" ? "一键完成强验证（演示）" : "确认执行"}</button>
+        <button class="subtle" data-cancel="${esc(p.id)}" data-type="${esc(p.type)}">拒绝</button>
       </div>
       <p class="small muted">演示环境：不会真的扣款、发短信或做实名认证；确认与拒绝都会进审计。</p>
     </article>`).join("");
   list.querySelectorAll("[data-confirm]").forEach(btn => {
     btn.addEventListener("click", async () => {
       const id = btn.dataset.confirm;
-      const verification = btn.dataset.red === "1"
-        ? { sms_code: "888888", face_verified: true }
-        : undefined;
       await busy(btn, "提交中…", async () => {
         try {
-          const res = await api("/api/scenarios/confirm", verification ? { id, verification } : { id });
+          let res;
+          if (btn.dataset.type === "wealth") {
+            res = await api("/api/decide", {
+              id, approved: true,
+              verification: btn.dataset.red ? { sms_code: "888888", face_verified: true } : undefined,
+            });
+          } else {
+            const verification = btn.dataset.red === "1"
+              ? { sms_code: "888888", face_verified: true }
+              : undefined;
+            res = await api("/api/scenarios/confirm", verification ? { id, verification } : { id });
+          }
           toast(cleanText(res.message || "已确认。"));
           await refreshSidebarState();
         } catch (error) {
@@ -403,7 +505,12 @@ function renderPending(items) {
       if (!window.confirm("拒绝后该操作不会执行。确定拒绝吗？")) return;
       await busy(btn, "提交中…", async () => {
         try {
-          const res = await api("/api/scenarios/cancel", { id: btn.dataset.cancel });
+          let res;
+          if (btn.dataset.type === "wealth") {
+            res = await api("/api/decide", { id: btn.dataset.cancel, approved: false });
+          } else {
+            res = await api("/api/scenarios/cancel", { id: btn.dataset.cancel });
+          }
           toast(cleanText(res.message || "已拒绝。"));
           await refreshSidebarState();
         } catch (error) { toast(error.message); }
@@ -433,6 +540,9 @@ $("#refresh-audit").addEventListener("click", async () => {
     try { const data = await api("/api/audit"); renderAudit(data.entries || []); }
     catch (error) { toast(error.message); }
   });
+});
+$("#refresh-brief").addEventListener("click", async () => {
+  await busy($("#refresh-brief"), "读取中…", async () => { await loadBrief(); });
 });
 
 // ---------- 账单来源引导 ----------
@@ -524,6 +634,18 @@ function renderCsvPreview(result, filename) {
   box.innerHTML = stats + table
     + `<p class="small muted">本地解析预览：文件只在你的浏览器里读取，不上传服务器。解析规则是演示级识别，格式特殊时可能不完整。</p>`;
   smoothScrollTo(box.getBoundingClientRect().top + window.scrollY - 14);
+}
+
+// ---------- 今日简报 ----------
+async function loadBrief() {
+  const box = $("#brief-box");
+  try {
+    const data = await api("/api/brief");
+    const lines = (data.lines || []).map(l => `<p class="brief-line">${esc(cleanText(l))}</p>`).join("");
+    box.innerHTML = `<p class="small muted">生成时间：${esc(data.generated_at || "—")} · 演示数据</p>` + (lines || `<p class="small muted">简报暂无内容。</p>`);
+  } catch (error) {
+    box.innerHTML = `<p class="small muted">简报读取失败：${esc(error.message)}</p>`;
+  }
 }
 
 // ---------- 启动 ----------

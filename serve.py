@@ -49,6 +49,14 @@ BACKEND_PATHS = {
     "/api/reset",
 }
 
+# 团队前端对比版/证据板页面：整段前缀转发给后端（含其 /static 资源）
+BACKEND_PREFIXES = (
+    "/compare",
+    "/evidence",
+    "/static/compare",
+    "/static/evidence",
+)
+
 mimetypes.add_type("text/javascript", ".js")
 mimetypes.add_type("text/css", ".css")
 mimetypes.add_type("image/svg+xml", ".svg")
@@ -125,6 +133,8 @@ class Handler(BaseHTTPRequestHandler):
             if path in BACKEND_PATHS:
                 return self._proxy("GET", self.path)
             return self._json(404, {"error": {"code": "API_NOT_FOUND", "message": "route not found"}})
+        if any(path == p or path.startswith(p + "/") for p in BACKEND_PREFIXES):
+            return self._proxy("GET", self.path)
         self._static(path)
 
     def do_POST(self):  # noqa: N802

@@ -156,6 +156,10 @@ body.banking-product .compact-detail summary { font-size:12px; }
 .scenario-card { font:inherit; text-align:left; color:var(--ink); cursor:pointer; transition:border-color .18s,transform .18s; }
 .scenario-card:hover { border-color:var(--green); transform:translateY(-2px); }
 
+/* 今日简报 */
+.brief-box { display:flex; flex-direction:column; gap:8px; margin:12px 0; }
+.brief-line { margin:0; padding:11px 14px; font-size:13px; line-height:1.7; background:rgba(25,23,21,.62); border:1px solid var(--line); border-radius:9px; }
+
 /* 移动端 */
 @media (max-width:650px) {
   body.banking-product .panel { padding:18px; }
