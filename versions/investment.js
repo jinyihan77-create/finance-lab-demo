@@ -131,7 +131,7 @@ function renderReview(data) {
   $("#dag-list").innerHTML = `<ol class="dag-list">${allNodes.map((n, i) => `
     <li class="dag-node node-${esc(n.status || "pending")}">
       <span class="dag-index">${String(i + 1).padStart(2, "0")}</span>
-      <div><b>${esc(n.label)}</b><small class="terminal-label">${esc(n.tool || "")}</small></div>
+      <div><b>${esc(n.label)}</b></div>
       <span class="dag-status">${esc(NODE_STATUS_TEXT[n.status] || n.status || "待执行")}</span>
     </li>`).join("")}</ol>`;
   $("#intent-note").textContent = [
@@ -141,7 +141,7 @@ function renderReview(data) {
   ].filter(Boolean).join(" · ");
 
   $("#evidence-data").innerHTML = `<dl class="evidence-dl">${[
-    `<div class="evidence-row"><dt>操作</dt><dd>${esc(JSON.stringify({ action: rec.action, symbol: rec.symbol, name: rec.name, quantity: rec.quantity, price: rec.price }))}</dd></div>`,
+    `<div class="evidence-row"><dt>操作</dt><dd>${esc(`${rec.action || "操作"} ${rec.name || rec.symbol || ""} ${rec.quantity ?? ""} 股${rec.price ? " @ ¥" + Number(rec.price).toFixed(2) : ""}${rec.amount ? "（约 ¥" + Number(rec.amount).toLocaleString("zh-CN") + "）" : ""}`)}</dd></div>`,
     `<div class="evidence-row"><dt>依据</dt><dd>${esc((rec.evidence || []).join("；") || "—")}</dd></div>`,
     `<div class="evidence-row"><dt>风险影响</dt><dd>${esc(rec.risk_impact || "—")}</dd></div>`,
     whatif.verdict ? `<div class="evidence-row"><dt>情景推演</dt><dd>${esc(whatif.verdict)}</dd></div>` : "",

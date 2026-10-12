@@ -506,7 +506,7 @@ function renderRun(res) {
     ? `<ol class="dag-list">${nodes.map((n, i) => `
       <li class="dag-node node-${esc(n.status || "pending")}">
         <span class="dag-index">${String(i + 1).padStart(2, "0")}</span>
-        <div><b>${esc(n.label)}</b><small class="terminal-label">${esc(n.tool || "")}</small></div>
+        <div><b>${esc(n.label)}</b></div>
         <span class="dag-status">${esc(NODE_STATUS_TEXT[n.status] || n.status || "待执行")}</span>
       </li>`).join("")}</ol>`
     : `<p class="small muted">该请求未生成任务节点（可能被拦截或超出银行场景）。</p>`;
@@ -515,7 +515,10 @@ function renderRun(res) {
     ? "该请求在入口被拦截，未进入任何场景执行。"
     : `意图：${intent.label || intent.name || "—"}${intent.question ? "（原话已保留在审计中）" : ""}`;
 
-  $("#evidence-data").innerHTML = r.scenario === "bill" ? renderBillEvidence(r.data) : renderEvidence(r.data);
+  // 明细：账单走精简支出视图；其余场景走人类可读摘要；无意义数据时整块隐藏
+  const summary = r.scenario === "bill" ? renderBillEvidence(r.data) : renderScenarioSummary(r);
+  const panel = $("#evidence-panel");
+  if (summary) { panel.hidden = false; $("#evidence-data").innerHTML = summary; } else { panel.hidden = true; }
 
   bankingPendings = res.pending || [];
   renderPending(bankingPendings);
@@ -523,25 +526,40 @@ function renderRun(res) {
   renderBreaker(res.breaker || {});
 }
 
-function renderEvidence(data) {
-  if (!data || !Object.keys(data).length) return `<p class="small muted">本任务没有附加业务数据（如越界或拦截请求）。</p>`;
-  const KEY_LABELS = {
-    period: "期间", total_spend: "支出合计", transaction_count: "笔数", by_category: "分类支出",
-    top_merchants: "主要商户", anomalies: "异常提示", insights: "洞察", generated_at: "生成时间",
-    balance: "可用余额", daily_cumulative: "今日累计转账", cards: "卡片", subscriptions: "订阅",
-    status: "状态", operation: "操作", card: "卡片信息", gate_checks: "闸门检查", new_limit: "新额度",
-    plan: "计划", plan_id: "计划编号", message: "说明", contacts: "通讯录", request: "请求内容",
-    target: "目标", amount: "金额", payee: "收款人", memo: "备注", payee_ok: "收款人核验",
-    balance_sufficient: "余额充足", within_limit: "限额内", remaining_limit: "剩余限额",
-    aa_items: "AA 分账", scheduled_at: "预约时间",
-  };
+// 各场景的人类可读摘要（替代原始键值展示）
+function renderScenarioSummary(r) {
+  const d = r.data || {};
   const rows = [];
-  for (const [key, value] of Object.entries(data)) {
-    const display = value === null || value === undefined ? "—"
-      : typeof value === "object" ? JSON.stringify(value) : String(value);
-    rows.push(`<div class="evidence-row"><dt>${esc(KEY_LABELS[key] || key)}</dt><dd>${esc(cleanText(display))}</dd></div>`);
+  const add = (label, value) => { if (value !== null && value !== undefined && String(value) !== "") rows.push([label, String(value)]); };
+  const s = r.scenario;
+  if (s === "transfer") {
+    const req = d.request || {};
+    add("收款人", req.payee);
+    add("金额", d.amount != null ? `¥${Number(d.amount).toLocaleString("zh-CN")}` : req.amount != null ? `¥${Number(req.amount).toLocaleString("zh-CN")}` : null);
+    add("备注", req.memo);
+    add("预约时间", req.scheduled_at);
+    add("AA 分账", (req.aa_participants || d.aa_items || []).join("、"));
+  } else if (s === "card") {
+    const c = d.card || {};
+    add("卡片", `${c.last4 ? "尾号 " + c.last4 + " · " : ""}${c.bank || ""} ${c.card_type || ""}`.trim());
+    add("状态", { normal: "正常", locked: "已锁定", lost: "已挂失" }[c.status] || c.status);
+    add("操作", { loss_report: "挂失", lock: "锁卡", unlock: "解锁", limit_adjust: "额度调整" }[d.operation] || d.operation);
+    if (d.new_limit) add("调整后额度", `¥${Number(d.new_limit).toLocaleString("zh-CN")}`);
+  } else if (s === "subscription") {
+    (d.subscriptions || []).slice(0, 8).forEach(sub => add(sub.merchant, `${Number(sub.amount || 0).toLocaleString("zh-CN")} 元/月 · ${sub.due_soon ? "即将续费" : "正常"}`));
+    if (d.target && d.target.merchant) add("本次操作", d.target.merchant);
+  } else if (s === "cross_scene") {
+    add("生日日期", d.birthday || d.date);
+    add("锁定额度", d.lock_amount != null ? `¥${Number(d.lock_amount).toLocaleString("zh-CN")}` : null);
+    add("计划", d.plan && d.plan.message ? d.plan.message : null);
+  } else if (s === "out_of_scope" || r.status === "blocked") {
+    return "";
+  } else {
+    if (d.balance != null) add("可用余额", `¥${Number(d.balance).toLocaleString("zh-CN")}`);
+    if (d.daily_cumulative != null) add("今日累计转账", `¥${Number(d.daily_cumulative).toLocaleString("zh-CN")}`);
   }
-  return `<dl class="evidence-dl">${rows.join("")}</dl>`;
+  if (!rows.length) return "";
+  return `<dl class="evidence-dl">${rows.map(([l, v]) => `<div class="evidence-row"><dt>${esc(l)}</dt><dd>${esc(cleanText(v))}</dd></div>`).join("")}</dl>`;
 }
 
 // 账单分析：精简支出记录视图（不铺原始字段名、不展示代码）
@@ -618,7 +636,7 @@ async function renderWealth(data) {
   $("#dag-list").innerHTML = `<ol class="dag-list">${allNodes.map((n, i) => `
     <li class="dag-node node-${esc(n.status || "pending")}">
       <span class="dag-index">${String(i + 1).padStart(2, "0")}</span>
-      <div><b>${esc(n.label)}</b><small class="terminal-label">${esc(n.tool || "")}</small></div>
+      <div><b>${esc(n.label)}</b></div>
       <span class="dag-status">${esc(NODE_STATUS_TEXT[n.status] || n.status || "待执行")}</span>
     </li>`).join("")}</ol>`;
   $("#intent-note").textContent = [
@@ -627,9 +645,9 @@ async function renderWealth(data) {
     data.data_tag || "",
   ].filter(Boolean).join(" · ");
 
-  // 证据：建议依据 + 情景推演
+  // 证据：建议依据 + 情景推演（人类可读，不展示原始 JSON）
   const evidenceHtml = [
-    `<div class="evidence-row"><dt>操作</dt><dd>${esc(cleanText(JSON.stringify({ action: rec.action, symbol: rec.symbol, name: rec.name, quantity: rec.quantity, price: rec.price })))}</dd></div>`,
+    `<div class="evidence-row"><dt>操作</dt><dd>${esc(cleanText(`${rec.action || "操作"} ${rec.name || rec.symbol || ""} ${rec.quantity ?? ""} 股${rec.price ? " @ ¥" + Number(rec.price).toFixed(2) : ""}${rec.amount ? "（约 ¥" + Number(rec.amount).toLocaleString("zh-CN") + "）" : ""}`))}</dd></div>`,
     `<div class="evidence-row"><dt>依据</dt><dd>${esc(cleanText((rec.evidence || []).join("；") || "—"))}</dd></div>`,
     `<div class="evidence-row"><dt>风险影响</dt><dd>${esc(cleanText(rec.risk_impact || "—"))}</dd></div>`,
     whatif.verdict ? `<div class="evidence-row"><dt>情景推演</dt><dd>${esc(cleanText(whatif.verdict))}</dd></div>` : "",
