@@ -8,11 +8,50 @@ const EXAMPLES = ["平安银行卖出30%", "申购沪深300指数基金", "帮�
 let lastResult = null;
 let running = false;
 let approvals = [];
+const IS_PAGES = /github\.io$/.test(location.hostname);
+
+const DEMO_WEALTH = {
+  queued: false, engine: "公开演示数据", data_tag: "公开演示数据",
+  recommendation: {
+    action: "卖出", symbol: "000001", name: "平安银行", quantity: 1500, price: 10.5, amount: 15750,
+    reason: "用户要求减持 平安银行 约 30%（公开演示样例）",
+    evidence: ["公开演示版展示固定样例", "不接真后端、不构成投资建议"],
+    risk_impact: "减持后释放约 15,750 元",
+  },
+  gate: { passed: true, checks: [
+    { name: "操作类型有效性", passed: true, detail: "操作 卖出" },
+    { name: "交易量有效性", passed: true, detail: "1,500 股 ≤ 持仓 5,000 股" },
+    { name: "权限分级判定", passed: true, detail: "红色权限 · 需强验证" },
+  ] },
+  whatif: {
+    verdict: "执行后 1 项改善、1 项恶化、3 项无变化，风险评分 -1.7 分，效果中性，可结合个人判断。",
+    deltas: [{ metric: "最大行业集中度", before: 50.0, after: 45.0 }],
+    caveats: ["公开演示数据，未计入手续费、印花税", "不构成对未来收益的判断"],
+  },
+  plan: { nodes: [
+    { id: "validate", label: "校验输入与权限", tool: "intent_router", status: "done" },
+    { id: "market", label: "读取持仓与行情", tool: "market_fetcher", status: "done" },
+    { id: "gate", label: "风控闸门", tool: "risk_gate", status: "done" },
+    { id: "confirm", label: "强验证与用户确认", tool: "approval_manager", status: "done" },
+  ] },
+  risk_alert: "公开演示数据 · 不构成投资建议",
+  assistant_message: "公开演示版：展示理财旗舰完整链路（体检 → 风控闸门 → 情景推演 → 确认），数据为固定样例。",
+};
 
 const tierBadge = (tier, label) =>
   `<span class="tier-badge tier-${esc(tier || "green")}">${esc(label || TIER_TEXT[tier] || tier)}</span>`;
 
 async function boot() {
+  if (IS_PAGES) {
+    $("#conn-stamp").textContent = "公开演示版 · 固定样例";
+    $("#example-chips").innerHTML = EXAMPLES.map(ex =>
+      `<button type="button" class="example-chip" data-example="${esc(ex)}">${esc(ex)}</button>`).join("");
+    document.querySelectorAll(".example-chip").forEach(chip => {
+      chip.addEventListener("click", () => { $("#question").value = chip.dataset.example; $("#run").disabled = false; runReview(); });
+    });
+    $("#run").disabled = !$("#question").value.trim();
+    return;
+  }
   try {
     await api("/api/bootstrap");
     $("#conn-stamp").textContent = "真链路已连接 · 团队后端";
@@ -45,11 +84,16 @@ async function runReview() {
   $("#results").hidden = false;
   $("#result-metrics").innerHTML = `<article class="metric"><small>状态</small><strong>正在体检…</strong><small>${esc(question)}</small></article>`;
   try {
-    const data = await api("/api/review", { question });
+    let data;
+    if (IS_PAGES) {
+      data = DEMO_WEALTH;
+    } else {
+      data = await api("/api/review", { question });
+    }
     lastResult = data;
     renderReview(data);
     await refreshApprovals();
-    toast(data.queued ? "体检完成，建议已进入待确认（红色权限）。" : "体检完成，结果在下面。");
+    toast(IS_PAGES ? "公开演示数据：已展示固定样例。" : (data.queued ? "体检完成，建议已进入待确认（红色权限）。" : "体检完成，结果在下面。"));
   } catch (error) {
     $("#verdict-title").textContent = "出了点问题";
     $("#verdict-copy").textContent = error.message;
@@ -109,6 +153,7 @@ function renderReview(data) {
 
 // ---------- 待确认（理财审批 /api/decide） ----------
 async function refreshApprovals() {
+  if (IS_PAGES) { approvals = []; renderPending(); return; }
   try {
     const data = await api("/api/approvals");
     approvals = (data && data.approvals) || [];

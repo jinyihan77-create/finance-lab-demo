@@ -166,9 +166,9 @@ async function boot() {
     } catch (_) { /* 待确认读取失败不影响主体 */ }
   } catch (error) {
     overview = null;
-    $("#conn-stamp").textContent = "演示模式 · 后端未连接";
+    $("#conn-stamp").textContent = IS_PAGES ? "公开演示版 · 演示数据" : "演示模式 · 后端未连接";
     $("#backend-notice").hidden = false;
-    $("#run").disabled = true;
+    $("#run").disabled = false; // 公开版走内置演示数据引擎，输入与卡片都可用
     renderTiers(STATIC_TIERS, true);
     renderBreaker({ locked: false, consecutive_failures: 0 }, true);
     renderExamples([]);
@@ -283,6 +283,116 @@ async function refreshSidebarState() {
   } catch (error) { toast("状态刷新失败：" + error.message); }
 }
 
+// ---------- 公开演示数据引擎（无后端时可用，全部结果标注演示数据） ----------
+let demoPending = [];
+const DEMO_TAG = "【公开演示数据】";
+
+const DEMO_BILL_DATA = {
+  period: "2026-10", total_spend: 17559.7, transaction_count: 28,
+  by_category: { "购物": 13665.5, "居住": 986.1, "餐饮": 866.6, "交通": 697.5, "医疗": 576.5, "娱乐": 385.0, "教育": 277.0, "通讯": 100.0 },
+  top_merchants: [
+    { merchant: "名表专柜", amount: 8600.0 }, { merchant: "新商户数码", amount: 3200.0 },
+    { merchant: "京东商城", amount: 1299.0 }, { merchant: "海底捞", amount: 486.0 },
+    { merchant: "体检中心", amount: 480.0 }, { merchant: "山姆会员店", amount: 458.5 },
+  ],
+  anomalies: [
+    { rule: "large_amount", severity: "warning", detail: "名表专柜 单笔支出 8,600 元（≥5000），请确认是否为本人消费" },
+    { rule: "overseas", severity: "info", detail: "Amazon US（US）境外商户交易" },
+    { rule: "night", severity: "info", detail: "凌晨便利店 凌晨 02:00 消费，若非常规作息请留意" },
+    { rule: "duplicate", severity: "warning", detail: "视频会员 在 2026-10-10 出现 2 笔相同金额 25.00 元的扣款，疑似重复扣费" },
+    { rule: "new_merchant", severity: "info", detail: "首次出现的商户 新商户数码 单笔 3,200 元，请确认交易真实性" },
+  ],
+  insights: ["购物类支出占比最高（78%），其中含两笔大额消费，建议核对。", "存在疑似重复扣费（视频会员），可在「待确认」发起取消。"],
+  generated_at: "2026-10-12T09:00:00",
+};
+const DEMO_SUBS = [
+  { sub_id: "sub_超燃健身_199", merchant: "超燃健身", amount: 199.0, cadence: "monthly", next_charge_at: "2026-11-01", status: "active", due_soon: false },
+  { sub_id: "sub_云音乐VIP_15", merchant: "云音乐VIP", amount: 15.0, cadence: "monthly", next_charge_at: "2026-11-03", status: "active", due_soon: false },
+  { sub_id: "sub_云盘Pro_68", merchant: "云盘Pro", amount: 68.0, cadence: "monthly", next_charge_at: "2026-11-05", status: "active", due_soon: false },
+  { sub_id: "sub_咖啡月卡_88", merchant: "咖啡月卡", amount: 88.0, cadence: "monthly", next_charge_at: "2026-10-20", status: "active", due_soon: true },
+  { sub_id: "sub_杂志订阅_30", merchant: "杂志订阅", amount: 30.0, cadence: "monthly", next_charge_at: "2026-10-22", status: "active", due_soon: true },
+];
+const DEMO_CARDS = [
+  { last4: "8888", bank: "平安银行", card_type: "信用卡", status: "normal", credit_limit: 50000, daily_txn_limit: 20000 },
+  { last4: "6666", bank: "招商银行", card_type: "借记卡", status: "normal", credit_limit: 0, daily_txn_limit: 50000 },
+  { last4: "1234", bank: "工商银行", card_type: "信用卡", status: "locked", credit_limit: 30000, daily_txn_limit: 10000 },
+  { last4: "5555", bank: "建设银行", card_type: "借记卡", status: "normal", credit_limit: 0, daily_txn_limit: 20000 },
+  { last4: "0000", bank: "交通银行", card_type: "信用卡", status: "normal", credit_limit: 80000, daily_txn_limit: 30000 },
+];
+
+function demoPlan(scenario, nodes) {
+  return { intent: scenario, nodes: (nodes || []).map((n, i) => ({ id: `n${i}`, label: n, tool: "demo_tool", depends_on: [], status: "done" })) };
+}
+function demoResult(scenario, label, tier, status, message, data, planNodes) {
+  return {
+    demo: true,
+    delegated: false,
+    result: {
+      scenario, scenario_label: label, intent: { name: scenario, label },
+      plan: demoPlan(scenario, planNodes || ["校验输入", "确定性检查", "执行"]),
+      tier, tier_label: TIER_TEXT[tier], status, message, data,
+    },
+    pending: [...demoPending],
+    breaker: { locked: false, consecutive_failures: 0, threshold: 3 },
+  };
+}
+function runDemoTask(question) {
+  const q = String(question || "");
+  const has = (...words) => words.some(w => q.includes(w));
+  if (has("账单", "异常", "花了多少", "流水")) {
+    const msg = has("异常") ? "近 30 天账单扫描完成：28 笔支出中发现 5 处需留意（大额、境外、深夜、重复扣费、新商户）。"
+      : "2026-10 账单分析完成：共 28 笔支出，合计 17,559.70 元，标记 5 处需留意。";
+    return demoResult("bill", "账单分析", "green", "done", DEMO_TAG + msg, DEMO_BILL_DATA, ["读取账单", "分类统计", "异常识别"]);
+  }
+  if (has("订阅")) {
+    return demoResult("subscription", "订阅/代扣管理", "green", "done",
+      DEMO_TAG + `识别出 ${DEMO_SUBS.length} 个生效中的订阅/代扣，其中 2 个即将续费。`,
+      { subscriptions: DEMO_SUBS, due_soon: DEMO_SUBS.filter(s => s.due_soon) }, ["扫描流水", "识别重复扣款", "续费提醒"]);
+  }
+  if (has("卡") && has("挂失")) {
+    const item = { id: "demo_" + Date.now(), scenario: "card", tier: "red", created_at: new Date().toISOString().slice(0, 19), message: "尾号 8888 挂失并立即冻结卡片（不可撤销，需强验证）。" };
+    demoPending.push(item);
+    return demoResult("card", "卡片管理", "red", "pending_confirmation",
+      DEMO_TAG + "已生成挂失请求：尾号 8888 挂失并立即冻结卡片（不可撤销，需强验证）。",
+      { operation: "loss_report", card: DEMO_CARDS[0], gate_checks: [{ name: "卡片存在性", passed: true }] },
+      ["定位卡片", "权限判定", "强验证"]);
+  }
+  if (has("卡", "银行卡")) {
+    return demoResult("card", "卡片管理", "green", "done",
+      DEMO_TAG + `您名下共 ${DEMO_CARDS.length} 张卡：` + DEMO_CARDS.map(c => `尾号 ${c.last4}（${c.bank} ${c.card_type}，${c.status === "normal" ? "正常" : "已锁"}）`).join("；") + "。",
+      { operation: "list", cards: DEMO_CARDS }, ["定位卡片", "状态读取"]);
+  }
+  if (has("转账", "转 500", "转500", "王芳")) {
+    const item = { id: "demo_" + Date.now(), scenario: "transfer", tier: "yellow", created_at: new Date().toISOString().slice(0, 19), message: "向 王芳 转账 500.00 元（备注：聚餐）。" };
+    demoPending.push(item);
+    return demoResult("transfer", "智能转账", "yellow", "pending_confirmation",
+      DEMO_TAG + "转账请求已就绪：向 王芳 转账 500.00 元（备注：聚餐），权限级别：黄色 · 需确认。",
+      { request: { payee: "王芳", amount: 500, memo: "聚餐" }, gate_checks: [{ name: "收款人核验", passed: true }, { name: "限额检查", passed: true }] },
+      ["收款人核验", "风控闸门", "用户确认"]);
+  }
+  if (has("生日", "爱人", "纪念日")) {
+    const item = { id: "demo_" + Date.now(), scenario: "cross_scene", tier: "yellow", created_at: new Date().toISOString().slice(0, 19), message: "跨场景计划：爱人 2026-10-25 生日，锁定 1,000 元活期并提前 2 天订花与蛋糕。" };
+    demoPending.push(item);
+    return demoResult("cross_scene", "跨场景联动", "yellow", "pending_confirmation",
+      DEMO_TAG + "已生成跨场景联动计划：爱人 2026-10-25 生日。锁定 1,000 元活期，生日前 2 天订花和蛋糕。",
+      { plan: { plan_id: "demo-plan" } }, ["生日识别", "资金锁定", "外部订购"]);
+  }
+  if (has("余额", "多少钱", "还有多少")) {
+    return demoResult("transfer", "余额查询", "green", "done",
+      DEMO_TAG + "账户可用余额 ¥25,680.50；今日已累计转账 ¥0.00。",
+      { balance: 25680.5, daily_cumulative: 0 }, ["读取余额"]);
+  }
+  if (has("卖出", "申购", "赎回", "理财", "基金", "股票")) {
+    return demoResult("wealth", "理财操作", "green", "done",
+      DEMO_TAG + "已生成理财建议（公开演示）：卖出 平安银行 1,500 股，约 ¥15,750。公开版不接真后端，仅作演示。",
+      { recommendation: { action: "卖出", symbol: "000001", name: "平安银行", quantity: 1500, price: 10.5, amount: 15750, reason: "用户要求减持 30%" } },
+      ["组合体检", "风控闸门", "情景推演"]);
+  }
+  return demoResult("bill", "账单分析", "green", "done",
+    DEMO_TAG + "公开演示版支持：账单分析、异常交易、订阅、余额、卡片、转账、挂失、生日联动。试试点上方卡片。",
+    {}, ["读取输入"]);
+}
+
 // ---------- 任务执行（一键入口） ----------
 async function runQuestion(question, sourceCard, localAction) {
   if (!question || running) return;
@@ -299,7 +409,10 @@ async function runQuestion(question, sourceCard, localAction) {
   switchView(sourceHint ? "bills" : "results");
   try {
     let res;
-    if (localAction === "balance") {
+    if (overview === null) {
+      // 公开演示版：内置演示数据引擎，保证每个入口都有结果
+      res = runDemoTask(localAction === "balance" ? "账户还有多少钱" : trimmed);
+    } else if (localAction === "balance") {
       res = await localBalance();
     } else {
       res = await api("/api/scenarios/run", { question: trimmed });
@@ -375,6 +488,11 @@ function renderExamples(scenarios) {
 
 function renderRun(res) {
   const r = res.result || {};
+  if (r.scenario === "wealth") {
+    // 理财结果统一走旗舰渲染（公开演示/真链路一致）
+    renderWealth({ ...(r.data || {}), queued: false, engine: res.demo ? "公开演示数据" : (r.data || {}).engine || "规则引擎", risk_alert: res.demo ? DEMO_TAG : (r.data || {}).risk_alert });
+    return;
+  }
   const tier = r.tier || "green";
   $("#result-metrics").innerHTML = [
     ["场景", esc(cleanText(r.scenario_label || r.scenario || "—")), "由闭集路由判定"],
@@ -545,8 +663,13 @@ async function refreshWealthApprovals() {
 }
 
 function renderPending(items) {
-  const bankingItems = (items || []).map(p => ({ type: "scenario", ...p }));
-  const wealthItems = wealthApprovals.map(a => ({
+  let bankingItems = (items || []).map(p => ({ type: "scenario", ...p }));
+  if (overview === null) {
+    // 公开演示版：以内存演示队列为准
+    bankingItems = bankingItems.filter(p => !String(p.id).startsWith("demo_"));
+    bankingItems = bankingItems.concat(demoPending.map(p => ({ type: "scenario", ...p })));
+  }
+  const wealthItems = overview === null ? [] : wealthApprovals.map(a => ({
     type: "wealth", id: a.id, scenario: "wealth",
     tier: "red", created_at: a.created_at,
     message: `${a.action || "操作"}：${a.name || a.symbol || ""} ${a.quantity ?? ""} 股 @ ¥${Number(a.price ?? 0).toFixed(2)}（约 ¥${Number(a.amount ?? 0).toLocaleString("zh-CN")}）`,
@@ -573,6 +696,13 @@ function renderPending(items) {
   list.querySelectorAll("[data-confirm]").forEach(btn => {
     btn.addEventListener("click", async () => {
       const id = btn.dataset.confirm;
+      // 公开演示版：本地演示队列直接确认
+      if (String(id).startsWith("demo_")) {
+        demoPending = demoPending.filter(p => p.id !== id);
+        renderPending(bankingPendings);
+        toast("已执行（公开演示数据，未发生真实资金变动）。");
+        return;
+      }
       await busy(btn, "提交中…", async () => {
         try {
           let res;
@@ -598,6 +728,12 @@ function renderPending(items) {
   });
   list.querySelectorAll("[data-cancel]").forEach(btn => {
     btn.addEventListener("click", async () => {
+      if (String(btn.dataset.cancel).startsWith("demo_")) {
+        demoPending = demoPending.filter(p => p.id !== btn.dataset.cancel);
+        renderPending(bankingPendings);
+        toast("已拒绝（公开演示数据）。");
+        return;
+      }
       if (!window.confirm("拒绝后该操作不会执行。确定拒绝吗？")) return;
       await busy(btn, "提交中…", async () => {
         try {
