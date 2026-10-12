@@ -30,22 +30,19 @@
 <div id="backend-notice" class="notice-note" hidden><p><b>团队后端未连接（演示模式）。</b>请在团队仓库运行 <code>python web/launch.py</code>（127.0.0.1:8765）后刷新本页。当前页面只展示静态能力说明。</p></div>
 <section class="console-view is-active" data-view="tasks" id="view-tasks">
 <section class="panel" id="quick-panel">
-<div class="row"><div><p class="section-kicker">QUICK TASKS / 一键任务</p><h2>不会打字？点一个，直接出结果</h2></div><span class="tag">点击即执行</span></div>
-<div class="quick-grid" id="quick-grid" aria-label="一键任务"></div>
+<div class="row"><div><p class="section-kicker">QUICK TASKS / 一键任务</p><h2>想办什么，点一下</h2></div></div>
+<div class="quick-grid quick-main" id="quick-grid" aria-label="一键任务"></div>
+<details class="compact-detail"><summary>更多任务</summary><div class="quick-grid" id="quick-more-grid" aria-label="更多任务"></div></details>
 </section>
 <section class="panel" id="say-panel">
 <div class="row"><div><p class="section-kicker">OR JUST SAY IT / 或者自己说</p><h2>打一句话也行</h2></div></div>
 <form id="task-form">
 <div class="nl-box"><textarea id="question" rows="2" maxlength="120" placeholder="这个月账单分析 ｜ 有没有异常交易 ｜ 给王芳转500元 ｜ 挂失尾号8888的卡"></textarea></div>
 <div class="example-chips" id="example-chips" aria-label="示例请求"></div>
-<div class="form-submit"><button id="run" type="submit" disabled>发起 →</button><span class="small muted" id="run-hint">输入后点发起，结果会切到「结果」页</span></div>
+<div class="form-submit"><button id="run" type="submit" disabled>发起 →</button></div>
 <p class="small danger" id="load-error" role="alert" hidden></p>
 <div id="run-feedback" class="inline-feedback" role="status" hidden></div>
 </form></section>
-<section class="panel" id="scenario-panel">
-<div class="row"><div><p class="section-kicker">SIX SCENARIOS / 场景能力</p><h2>还能办这些（点卡片直接办）</h2></div><span class="tag">对齐赛题：至少 3 个场景（鼓励全覆盖）</span></div>
-<div id="scenario-grid" class="scenario-grid"></div>
-</section>
 </section>
 <section class="console-view" data-view="bills" id="view-bills">
 <section class="panel" id="bill-source-panel">
@@ -65,13 +62,13 @@
 <div id="result-anchor" class="analysis-empty"><span class="empty-symbol"><svg class="arrow-ne" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M3 9 9 3M4.5 3H9v4.5"/></svg></span><div><h2>还没有任务结果</h2><p>去「办业务」点一张卡片，结果会显示在这里。</p></div><span class="terminal-label">READY WHEN YOU ARE</span></div>
 <div id="results" hidden>
 <section class="snapshot-card" id="result-summary"><div class="row"><div><p class="section-kicker">这次任务</p><h2>结果一眼看清</h2></div><span class="small muted">金额与权限由确定性闸门决定</span></div><div class="metrics compact-metrics" id="result-metrics"></div></section>
-<section class="result-verdict"><div><p class="section-kicker">执行结论</p><h2 id="verdict-title"></h2><p id="verdict-copy"></p><details class="why-details"><summary>任务是怎么一步步执行的</summary><div id="dag-list"></div><p class="small muted" id="intent-note"></p></details></div><span class="verdict-tag" id="verdict-tag"></span></section>
+<section class="result-verdict"><div><p class="section-kicker">执行结论</p><h2 id="verdict-title"></h2><p id="verdict-copy"></p><div id="inline-pending"></div><details class="why-details"><summary>任务是怎么一步步执行的</summary><div id="dag-list"></div><p class="small muted" id="intent-note"></p></details></div><span class="verdict-tag" id="verdict-tag"></span></section>
 <details class="panel" id="evidence-panel"><summary>任务数据明细</summary><p class="small">金额与结论由后端确定性闸门从演示数据计算，AI 不生成数字。</p><div id="evidence-data"></div></details>
 </div>
 </section>
 <section class="console-view" data-view="pending" id="view-pending">
-<section class="panel" id="pending-panel"><div class="row"><div><p class="section-kicker">需要你点头的事</p><h2>待确认</h2></div><span class="tag" id="pending-count">0</span></div><div id="pending-list" class="pending-list"><p class="small muted">暂无。转账、挂失等操作执行前会在这里等你确认。</p></div></section>
-<section class="panel" id="tier-panel"><div class="row"><div><p class="section-kicker">SAFETY / 权限分级</p><h2>为什么有的操作要你确认</h2></div><span class="tag">权限由 tiers.py 唯一权威决定</span></div><div id="tier-matrix" class="tier-matrix"></div></section>
+<section class="panel" id="pending-panel"><div class="row"><div><p class="section-kicker">需要你点头的事</p><h2>待确认</h2></div><span class="tag" id="pending-count">0</span></div><div id="pending-list" class="pending-list"><p class="small muted">暂无。</p></div></section>
+<section class="panel" id="tier-panel"><div class="row"><div><p class="section-kicker">SAFETY / 权限分级</p><h2>为什么有的操作要你确认</h2></div></div><div id="tier-matrix" class="tier-matrix"></div></section>
 </section>
 <section class="console-view" data-view="brief" id="view-brief">
 <section class="panel" id="brief-panel"><div class="row"><div><p class="section-kicker">DAILY BRIEF / 今日简报</p><h2>今天的市场与组合</h2></div><button id="refresh-brief" class="secondary">刷新</button></div><div id="brief-box" class="brief-box"><p class="small muted">读取中…</p></div><p class="small muted">简报由团队市场简报管线每日自动生成（演示数据），不构成投资建议。</p></section>

@@ -26,15 +26,17 @@ const cleanText = (value) => {
   return text;
 };
 
-// 一键任务：点击即执行
-const QUICK_TASKS = [
-  { icon: "📊", label: "这个月花了多少", question: "这个月账单分析" },
+// 一键任务：点击即执行（主 4 张 + 更多折叠）
+const QUICK_MAIN = [
+  { icon: "📊", label: "查账单", question: "这个月账单分析" },
+  { icon: "🔁", label: "查订阅", question: "我有哪些订阅？" },
+  { icon: "💸", label: "转账（演示）", question: "给王芳转500元备注聚餐" },
+  { icon: "🛡️", label: "挂失（演示）", question: "尾号8888的卡挂失" },
+];
+const QUICK_MORE = [
   { icon: "⚠️", label: "有没有异常交易", question: "帮我看看有没有异常交易" },
-  { icon: "🔁", label: "我有哪些订阅", question: "我有哪些订阅？" },
   { icon: "💰", label: "账户还有多少钱", question: "查询账户余额", local: "balance" },
   { icon: "💳", label: "我的卡什么状态", question: "查询我的银行卡" },
-  { icon: "💸", label: "给王芳转 500 元", question: "给王芳转500元备注聚餐" },
-  { icon: "🛡️", label: "挂失尾号 8888 的卡", question: "尾号8888的卡挂失" },
   { icon: "🎂", label: "给爱人备生日", question: "我爱人10月25日生日，锁定1000元活期" },
 ];
 
@@ -151,7 +153,6 @@ async function boot() {
   try {
     overview = await api("/api/scenarios/boot");
     renderStrip(overview);
-    renderScenarios(overview.scenarios || []);
     renderTiers(overview.tier_matrix || []);
     renderBreaker(overview.breaker || {});
     renderExamples(overview.scenarios || []);
@@ -200,29 +201,15 @@ function renderStrip(data) {
 }
 
 function renderQuickTasks() {
-  $("#quick-grid").innerHTML = QUICK_TASKS.map(t => `
+  const card = t => `
     <button type="button" class="quick-card" data-question="${esc(t.question)}"${t.local ? ` data-local="${esc(t.local)}"` : ""}>
       <span class="quick-icon">${t.icon}</span>
       <b>${esc(t.label)}</b>
-    </button>`).join("");
+    </button>`;
+  $("#quick-grid").innerHTML = QUICK_MAIN.map(card).join("");
+  $("#quick-more-grid").innerHTML = QUICK_MORE.map(card).join("");
   document.querySelectorAll(".quick-card").forEach(card => {
     card.addEventListener("click", () => runQuestion(card.dataset.question, card, card.dataset.local || null));
-  });
-}
-
-function renderScenarios(scenarios) {
-  const cards = (scenarios && scenarios.length ? scenarios : STATIC_SCENARIOS).map(s => `
-    <button type="button" class="scenario-card" data-question="${esc((s.examples || [])[0] || "")}">
-      <div class="card-top"><span class="feature-icon">${esc(s.icon || "")}</span><span class="terminal-label">${esc((s.key || "").toUpperCase())}</span></div>
-      <h3>${esc(s.name)}</h3>
-      <p>${esc(s.desc)}</p>
-      <p class="small muted">${esc(s.tier_note)}</p>
-    </button>`);
-  $("#scenario-grid").innerHTML = cards.join("");
-  document.querySelectorAll(".scenario-card").forEach(card => {
-    card.addEventListener("click", () => {
-      if (card.dataset.question) runQuestion(card.dataset.question, card);
-    });
   });
 }
 
@@ -400,6 +387,11 @@ async function runQuestion(question, sourceCard, localAction) {
   $("#question").value = trimmed;
   if (overview === null) { $("#run").disabled = false; }
   const sourceHint = detectSourcePhrase(trimmed);
+  // 记录已有待办，用于结果页只展示本次任务新产生的确认按钮
+  knownPendingIds = new Set([
+    ...(bankingPendings || []).map(p => p.id),
+    ...wealthApprovals.map(a => a.id),
+  ]);
   running = true;
   if (sourceCard) sourceCard.classList.add("is-busy");
   lastResult = null;
@@ -478,7 +470,7 @@ $("#question").addEventListener("input", () => {
 
 function renderExamples(scenarios) {
   const list = scenarios && scenarios.length ? scenarios : STATIC_SCENARIOS;
-  const chips = list.flatMap(s => (s.examples || []).slice(0, 1)).slice(0, 6);
+  const chips = list.flatMap(s => (s.examples || []).slice(0, 1)).slice(0, 3);
   $("#example-chips").innerHTML = chips.map(ex =>
     `<button type="button" class="example-chip" data-example="${esc(ex)}">${esc(ex)}</button>`).join("");
   document.querySelectorAll(".example-chip").forEach(chip => {
@@ -525,6 +517,7 @@ function renderRun(res) {
 
   bankingPendings = res.pending || [];
   renderPending(bankingPendings);
+  renderInlinePending();
   renderBreaker(res.breaker || {});
 }
 
@@ -650,10 +643,102 @@ async function renderWealth(data) {
     await refreshWealthApprovals();
     renderPending(bankingPendings);
   }
+  renderInlinePending();
 }
 
 // ---------- 待确认（一键化，含理财旗舰审批） ----------
 let wealthApprovals = [];
+let knownPendingIds = new Set();
+
+async function confirmItem(id, type, red, sourceBtn) {
+  if (String(id).startsWith("demo_")) {
+    demoPending = demoPending.filter(p => p.id !== id);
+    renderPending(bankingPendings);
+    renderInlinePending(bankingPendings);
+    toast("已执行（公开演示数据，未发生真实资金变动）。");
+    return;
+  }
+  await busy(sourceBtn, "提交中…", async () => {
+    try {
+      let res;
+      if (type === "wealth") {
+        res = await api("/api/decide", {
+          id, approved: true,
+          verification: red ? { sms_code: "888888", face_verified: true } : undefined,
+        });
+      } else {
+        const verification = red ? { sms_code: "888888", face_verified: true } : undefined;
+        res = await api("/api/scenarios/confirm", verification ? { id, verification } : { id });
+      }
+      toast(cleanText(res.message || "已确认。"));
+      await refreshSidebarState();
+      renderInlinePending(bankingPendings);
+    } catch (error) {
+      toast(error.message);
+      await refreshSidebarState();
+      renderInlinePending(bankingPendings);
+    }
+  });
+}
+
+async function cancelItem(id, type, sourceBtn) {
+  if (String(id).startsWith("demo_")) {
+    demoPending = demoPending.filter(p => p.id !== id);
+    renderPending(bankingPendings);
+    renderInlinePending(bankingPendings);
+    toast("已拒绝（公开演示数据）。");
+    return;
+  }
+  if (!window.confirm("拒绝后该操作不会执行。确定拒绝吗？")) return;
+  await busy(sourceBtn, "提交中…", async () => {
+    try {
+      let res;
+      if (type === "wealth") {
+        res = await api("/api/decide", { id, approved: false });
+      } else {
+        res = await api("/api/scenarios/cancel", { id });
+      }
+      toast(cleanText(res.message || "已拒绝。"));
+      await refreshSidebarState();
+      renderInlinePending(bankingPendings);
+    } catch (error) { toast(error.message); }
+  });
+}
+
+function pendingItemHtml(p) {
+  return `
+    <article class="pending-item tier-${esc(p.tier || "yellow")}">
+      <div class="row"><h3>${esc(cleanText(p.message || "待确认操作"))}</h3>${tierBadge(p.tier, p.tier === "red" ? "红色权限 · 强验证" : "黄色权限 · 确认")}</div>
+      <p class="small muted">${p.type === "wealth" ? "理财旗舰" : esc(p.scenario || "")} · ${esc(p.created_at || "")}</p>
+      <div class="verify-row">
+        <button class="primary" data-confirm="${esc(p.id)}" data-type="${esc(p.type)}" data-red="${p.tier === "red" ? "1" : ""}">✓ ${p.tier === "red" ? "一键完成强验证（演示）" : "确认执行"}</button>
+        <button class="subtle" data-cancel="${esc(p.id)}" data-type="${esc(p.type)}">拒绝</button>
+      </div>
+      <p class="small muted">演示环境：不会真的扣款、发短信或做实名认证。</p>
+    </article>`;
+}
+
+// 结果页就地确认：只显示本次任务新产生的待办
+function renderInlinePending() {
+  const box = $("#inline-pending");
+  if (!box) return;
+  const newItems = bankingPendings.filter(p => !knownPendingIds.has(p.id));
+  const newWealth = overview === null ? [] : wealthApprovals
+    .filter(a => !knownPendingIds.has(a.id))
+    .map(a => ({
+      type: "wealth", id: a.id, scenario: "wealth", tier: "red", created_at: a.created_at,
+      message: `${a.action || "操作"}：${a.name || a.symbol || ""} ${a.quantity ?? ""} 股 @ ¥${Number(a.price ?? 0).toFixed(2)}（约 ¥${Number(a.amount ?? 0).toLocaleString("zh-CN")}）`,
+    }));
+  const all = [...newItems, ...newWealth];
+  if (!all.length) { box.innerHTML = ""; return; }
+  box.innerHTML = `<div class="inline-pending-box">${all.map(pendingItemHtml).join("")}</div>`;
+  box.querySelectorAll("[data-confirm]").forEach(btn => {
+    btn.addEventListener("click", () => confirmItem(btn.dataset.confirm, btn.dataset.type, btn.dataset.red === "1", btn));
+  });
+  box.querySelectorAll("[data-cancel]").forEach(btn => {
+    btn.addEventListener("click", () => cancelItem(btn.dataset.cancel, btn.dataset.type, btn));
+  });
+}
 
 async function refreshWealthApprovals() {
   try {
@@ -680,74 +765,15 @@ function renderPending(items) {
   if (badge) { badge.hidden = all.length === 0; badge.textContent = String(all.length); }
   const list = $("#pending-list");
   if (!all.length) {
-    list.innerHTML = `<p class="small muted">暂无。转账、挂失、理财申赎等操作执行前会在这里等你确认。</p>`;
+    list.innerHTML = `<p class="small muted">暂无。</p>`;
     return;
   }
-  list.innerHTML = all.map(p => `
-    <article class="pending-item tier-${esc(p.tier || "yellow")}">
-      <div class="row"><h3>${esc(cleanText(p.message || "待确认操作"))}</h3>${tierBadge(p.tier, p.tier === "red" ? "红色权限 · 强验证" : "黄色权限 · 确认")}</div>
-      <p class="small muted">${p.type === "wealth" ? "理财旗舰" : esc(p.scenario || "")} · ${esc(p.created_at || "")}</p>
-      <div class="verify-row">
-        <button class="primary" data-confirm="${esc(p.id)}" data-type="${esc(p.type)}" data-red="${p.tier === "red" ? "1" : ""}">✓ ${p.tier === "red" ? "一键完成强验证（演示）" : "确认执行"}</button>
-        <button class="subtle" data-cancel="${esc(p.id)}" data-type="${esc(p.type)}">拒绝</button>
-      </div>
-      <p class="small muted">演示环境：不会真的扣款、发短信或做实名认证；确认与拒绝都会进审计。</p>
-    </article>`).join("");
+  list.innerHTML = all.map(pendingItemHtml).join("");
   list.querySelectorAll("[data-confirm]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const id = btn.dataset.confirm;
-      // 公开演示版：本地演示队列直接确认
-      if (String(id).startsWith("demo_")) {
-        demoPending = demoPending.filter(p => p.id !== id);
-        renderPending(bankingPendings);
-        toast("已执行（公开演示数据，未发生真实资金变动）。");
-        return;
-      }
-      await busy(btn, "提交中…", async () => {
-        try {
-          let res;
-          if (btn.dataset.type === "wealth") {
-            res = await api("/api/decide", {
-              id, approved: true,
-              verification: btn.dataset.red ? { sms_code: "888888", face_verified: true } : undefined,
-            });
-          } else {
-            const verification = btn.dataset.red === "1"
-              ? { sms_code: "888888", face_verified: true }
-              : undefined;
-            res = await api("/api/scenarios/confirm", verification ? { id, verification } : { id });
-          }
-          toast(cleanText(res.message || "已确认。"));
-          await refreshSidebarState();
-        } catch (error) {
-          toast(error.message);
-          await refreshSidebarState();
-        }
-      });
-    });
+    btn.addEventListener("click", () => confirmItem(btn.dataset.confirm, btn.dataset.type, btn.dataset.red === "1", btn));
   });
   list.querySelectorAll("[data-cancel]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      if (String(btn.dataset.cancel).startsWith("demo_")) {
-        demoPending = demoPending.filter(p => p.id !== btn.dataset.cancel);
-        renderPending(bankingPendings);
-        toast("已拒绝（公开演示数据）。");
-        return;
-      }
-      if (!window.confirm("拒绝后该操作不会执行。确定拒绝吗？")) return;
-      await busy(btn, "提交中…", async () => {
-        try {
-          let res;
-          if (btn.dataset.type === "wealth") {
-            res = await api("/api/decide", { id: btn.dataset.cancel, approved: false });
-          } else {
-            res = await api("/api/scenarios/cancel", { id: btn.dataset.cancel });
-          }
-          toast(cleanText(res.message || "已拒绝。"));
-          await refreshSidebarState();
-        } catch (error) { toast(error.message); }
-      });
-    });
+    btn.addEventListener("click", () => cancelItem(btn.dataset.cancel, btn.dataset.type, btn));
   });
 }
 
