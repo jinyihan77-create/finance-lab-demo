@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 import mimetypes
+import os
 import sys
 import urllib.error
 import urllib.request
@@ -24,6 +25,12 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
+
+# pythonw 无窗口模式下 stdout 为 None，print 会崩溃——写入黑洞保持兼容
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, "w", encoding="utf-8")
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, "w", encoding="utf-8")
 
 ROOT = Path(__file__).resolve().parent
 BACKEND = "http://127.0.0.1:8765"
