@@ -27,8 +27,9 @@ from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parent
 BACKEND = "http://127.0.0.1:8765"
+RISK_UPSTREAM = "https://fund-risk-workbench.panxintian44.chatgpt.site"
 DEFAULT_PORT = 8766
-PROXY_TIMEOUT = 8
+PROXY_TIMEOUT = 12
 
 # 团队银行后端（web/app.py）的白名单路由：只有这些接口会转发到真后端。
 BACKEND_PATHS = {
@@ -55,6 +56,15 @@ BACKEND_PREFIXES = (
     "/evidence",
     "/static/compare",
     "/static/evidence",
+)
+
+# 在线风控工作台（公网部署）：整段前缀转发，同源内嵌进工作台「风控」标签页。
+# 注意顺序：/api/safety、/api/paper-trade 必须先于 /api 白名单判定。
+RISK_PREFIXES = (
+    "/risk",
+    "/investment",
+    "/api/safety",
+    "/api/paper-trade",
 )
 
 mimetypes.add_type("text/javascript", ".js")
@@ -88,14 +98,28 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     # ---- 后端代理 ----
-    def _proxy(self, method: str, path: str) -> None:
-        url = BACKEND + path
+    def _proxy(self, method: str, path: str, base: str | None = None) -> None:
+        base = base or BACKEND
+        url = base + path
         data = None
         if method == "POST":
             length = int(self.headers.get("Content-Length") or 0)
             data = self.rfile.read(length) if length else b""
         req = urllib.request.Request(url, data=data, method=method)
         req.add_header("Content-Type", "application/json; charset=utf-8")
+        # 风控工作台在 Cloudflare 后面：需要浏览器级请求头，否则 1010 拦截
+        req.add_header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
+        req.add_header("Accept", "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8")
+        req.add_header("Accept-Language", "zh-CN,zh;q=0.9")
+        # 转发调用方自定义头（如风控工作台的 X-Risk-Csrf）
+        for name, value in self.headers.items():
+            if base == RISK_UPSTREAM and name.lower() in ("origin", "referer"):
+                continue  # 上游按自身 Origin 校验 CSRF，代理同源后必须丢弃
+            if name.lower() in ("x-risk-csrf", "authorization", "x-requested-with"):
+                req.add_header(name, value)
+            # 风控工作台的 CSRF 与 risk_session cookie 绑定，需双向转发 cookie
+            if base == RISK_UPSTREAM and name.lower() == "cookie":
+                req.add_header("Cookie", value)
         try:
             with urllib.request.urlopen(req, timeout=PROXY_TIMEOUT) as resp:
                 body = resp.read()
@@ -103,6 +127,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header("Content-Type",
                                  resp.headers.get("Content-Type", "application/json") + "; charset=utf-8")
                 self.send_header("Cache-Control", NO_CACHE)
+                if base == RISK_UPSTREAM:
+                    for cookie in resp.headers.get_all("Set-Cookie") or []:
+                        self.send_header("Set-Cookie", cookie)
                 self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
                 self.wfile.write(body)
@@ -115,7 +142,7 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(body)
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
             self._json(503, {"error": {"code": "BACKEND_UNAVAILABLE",
-                                       "message": "团队后端未启动（127.0.0.1:8765）。"}})
+                                       "message": "上游服务不可达（团队后端或在线风控工作台）。"}})
 
     # ---- 通用 ----
     def _json(self, status: int, payload: dict) -> None:
@@ -129,6 +156,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):  # noqa: N802
         path = urlparse(self.path).path
+        if any(path == p or path.startswith(p + "/") for p in RISK_PREFIXES):
+            return self._proxy("GET", self.path, base=RISK_UPSTREAM)
         if path.startswith("/api/"):
             if path in BACKEND_PATHS:
                 return self._proxy("GET", self.path)
@@ -139,6 +168,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):  # noqa: N802
         path = urlparse(self.path).path
+        if any(path == p or path.startswith(p + "/") for p in RISK_PREFIXES):
+            return self._proxy("POST", self.path, base=RISK_UPSTREAM)
         if path.startswith("/api/"):
             if path in BACKEND_PATHS:
                 return self._proxy("POST", self.path)

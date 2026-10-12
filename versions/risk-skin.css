@@ -1,0 +1,27 @@
+/* 风控工作台统一皮肤：对齐 Finance Lab 深色玻璃设计语言（同源 iframe 注入） */
+html, body { background:#0a0a0a !important; color:#f7f7f5 !important; font-family:Inter,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif !important; }
+header { background:rgba(20,18,16,.92) !important; color:#f7f7f5 !important; border-bottom:1px solid #2a2a2e !important; box-shadow:none !important; }
+header .brand, header .mode { color:#f7f7f5 !important; }
+header .mode { color:#ffb865 !important; }
+header nav a { color:#c9c0b6 !important; }
+header nav a[aria-current="page"] { color:#ffb865 !important; border-color:#ff8b38 !important; }
+main, section, aside, article, footer { border-color:#2a2a2e !important; color:#f7f7f5 !important; }
+.intro, .policy-panel, .attack, .model-panel, .workspace, .results, .policy-chain, .attack-nodes, .table-scroll, section > div, aside { background:rgba(25,23,21,.62) !important; border:1px solid #2a2a2e !important; border-radius:12px !important; box-shadow:none !important; }
+h1, h2, h3, h4, strong, b, .section-title { color:#f7f7f5 !important; }
+p, li, label, span, small, .muted, .fine, .empty, .empty-copy { color:#c9c0b6 !important; }
+a { color:#ffb865 !important; }
+button { background:linear-gradient(135deg,#ffb865,#ed7627) !important; color:#17100a !important; border:1px solid transparent !important; border-radius:10px !important; font-weight:600 !important; }
+button:hover { filter:brightness(1.06); }
+button.secondary, button.text-button { background:rgba(25,23,21,.85) !important; color:#f7f7f5 !important; border:1px solid #3a3a3e !important; }
+input, select, textarea { background:#101010 !important; color:#f7f7f5 !important; border:1px solid #3a3a3e !important; border-radius:8px !important; }
+input:focus, select:focus, textarea:focus { border-color:#ff8b38 !important; outline:none !important; box-shadow:0 0 0 3px rgba(255,139,56,.14) !important; }
+table { background:#141414 !important; border-color:#2a2a2e !important; }
+th, td { color:#f7f7f5 !important; border-color:#2a2a2e !important; }
+pre, code, .mono { background:#0e0d0c !important; color:#ffd9a3 !important; border:1px solid #2a2a2e !important; border-radius:8px !important; }
+.flow li { background:rgba(25,23,21,.7) !important; border:1px solid #2a2a2e !important; border-radius:999px !important; color:#c9c0b6 !important; }
+.flow li.active { border-color:#ff8b38 !important; color:#ffb865 !important; }
+.status, #notice { background:rgba(255,139,56,.12) !important; border:1px solid rgba(255,139,56,.4) !important; color:#ffc9a0 !important; border-radius:8px !important; }
+details { background:rgba(25,23,21,.55) !important; border:1px solid #2a2a2e !important; border-radius:8px !important; }
+details summary { color:#f7f7f5 !important; }
+.checkline, .actions { border-color:#2a2a2e !important; }
+footer { background:transparent !important; border:none !important; color:#a1a1a6 !important; }

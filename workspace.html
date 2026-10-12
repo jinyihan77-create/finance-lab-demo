@@ -13,8 +13,8 @@
 </nav>
 <div class="sidebar-caption section-label">WORKSPACE / 工作空间</div>
 <nav class="section-nav" aria-label="本页导航"><a href="#" data-view="tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6z"/><path d="M8 12l3 3 5-6"/></svg>办业务</a><a href="#" data-view="bills"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h4"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>我的账单</a><a href="#" data-view="results"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 4v16h17"/><path d="M8 14l4-5 4 3 5-7"/></svg>任务结果</a><a href="#" data-view="pending"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 8v4l3 3"/><path d="M12 3a9 9 0 1 0 9 9"/></svg>待确认</a><a href="#" data-view="brief"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h4"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>今日简报</a><a href="#" data-view="audit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 8v4l3 3"/><path d="M12 3a9 9 0 1 0 9 9"/></svg>审计回放</a><a href="catalog.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/><path d="M3 14h7v7H3z"/><path d="M14 14h7v7h-7z"/></svg>产品导航</a></nav>
-<div class="sidebar-caption section-label">团队成果 / 联调</div>
-<nav class="section-nav" aria-label="团队成果"><a href="https://fund-risk-workbench.panxintian44.chatgpt.site/risk" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6z"/><path d="M8 12l3 3 5-6"/></svg>在线风控工作台 ↗</a><a href="/compare" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 4v16h17"/><path d="M8 14l4-5 4 3 5-7"/></svg>安全任务台·对比版 ↗</a><a href="/evidence" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/><path d="M3 14h7v7H3z"/><path d="M14 14h7v7h-7z"/></svg>视觉证据板 ↗</a></nav><div class="sidebar-bottom"><p class="sidebar-footnote">FINANCE LAB<br>银行 AI 智能体 · 比赛演示</p></div></aside>
+<div class="sidebar-caption section-label">扩展能力</div>
+<nav class="section-nav" aria-label="扩展能力"><a href="#" data-view="risk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6z"/><path d="M8 12l3 3 5-6"/></svg>在线风控工作台</a><a href="/compare" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 4v16h17"/><path d="M8 14l4-5 4 3 5-7"/></svg>安全任务台·对比版 ↗</a><a href="/evidence" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/><path d="M3 14h7v7H3z"/><path d="M14 14h7v7h-7z"/></svg>视觉证据板 ↗</a></nav><div class="sidebar-bottom"><p class="sidebar-footnote">FINANCE LAB<br>银行 AI 智能体 · 比赛演示</p></div></aside>
 <main class="compact-main" id="main-content" tabindex="-1">
 <section class="hero compact-hero" id="overview"><div><p class="eyebrow">01 / BANKING TASK CONSOLE</p><h1>一句话，办完<span class="accent-text">一件银行事。</span></h1><p class="muted hero-lede">点下面的卡片，直接看结果；也可以自己说一句。</p></div><div class="hero-actions"><span class="product-stamp" id="conn-stamp">连接检测中…</span><button type="button" class="button hero-cta" data-view-btn="tasks">开始办业务 <span><svg class="arrow-ne" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M3 9 9 3M4.5 3H9v4.5"/></svg></span></button></div></section>
 <div class="data-strip" id="account-strip"><span class="archive-skeleton" role="status" aria-label="正在读取账户状态"></span></div>
@@ -24,6 +24,7 @@
   <button type="button" class="console-tab" data-view-btn="results">📈 结果</button>
   <button type="button" class="console-tab" data-view-btn="pending">✋ 待确认 <span class="nav-badge" id="pending-badge" hidden>0</span></button>
   <button type="button" class="console-tab" data-view-btn="brief">📰 简报</button>
+  <button type="button" class="console-tab" data-view-btn="risk">🛡️ 风控</button>
   <button type="button" class="console-tab" data-view-btn="audit">🗂 审计</button>
 </nav>
 <div id="backend-notice" class="notice-note" hidden><p><b>团队后端未连接（演示模式）。</b>请在团队仓库运行 <code>python web/launch.py</code>（127.0.0.1:8765）后刷新本页。当前页面只展示静态能力说明。</p></div>
@@ -74,6 +75,13 @@
 </section>
 <section class="console-view" data-view="brief" id="view-brief">
 <section class="panel" id="brief-panel"><div class="row"><div><p class="section-kicker">DAILY BRIEF / 今日简报</p><h2>今天的市场与组合</h2></div><button id="refresh-brief" class="secondary">刷新</button></div><div id="brief-box" class="brief-box"><p class="small muted">读取中…</p></div><p class="small muted">简报由团队市场简报管线每日自动生成（演示数据），不构成投资建议。</p></section>
+</section>
+<section class="console-view" data-view="risk" id="view-risk">
+<section class="panel" id="risk-panel">
+<div class="row"><div><p class="section-kicker">RISK WORKBENCH / 在线风控工作台</p><h2>风险检查与模拟执行（团队公网部署）</h2></div><span class="tag">已内嵌 · 同源代理</span></div>
+<div class="risk-bar"><span class="small muted">健康检查 → 风险判断 → 用户确认 → 模拟执行 → 审计，一条决策链。虚构数据，不连接真实账户。</span><a class="secondary" href="https://fund-risk-workbench.panxintian44.chatgpt.site/risk" target="_blank" rel="noopener">新窗口打开 ↗</a></div>
+<div class="risk-frame-wrap"><iframe id="risk-frame" title="在线风控工作台" loading="lazy" referrerpolicy="no-referrer"></iframe></div>
+</section>
 </section>
 <section class="console-view" data-view="audit" id="view-audit">
 <section class="panel" id="audit-panel"><div class="row"><div><p class="section-kicker">AUDIT / 审计回放</p><h2>每一步都有记录</h2></div><button id="refresh-audit" class="secondary">刷新</button></div><div id="breaker-box" class="breaker-box"></div><div id="audit-list"></div></section>

@@ -83,6 +83,41 @@ function switchView(name) {
   document.querySelectorAll(".console-view").forEach(v => v.classList.toggle("is-active", v.dataset.view === name));
   document.querySelectorAll(".console-tab").forEach(t => t.classList.toggle("is-active", t.dataset.viewBtn === name));
   if (name === "brief") loadBrief();
+  if (name === "risk") {
+    const frame = $("#risk-frame");
+    if (frame && !frame.dataset.loaded) {
+      frame.dataset.loaded = "1";
+      frame.src = "/risk";
+      // 同源代理：注入统一皮肤，风控工作台与整站视觉一致
+      frame.addEventListener("load", () => {
+        try {
+          const doc = frame.contentDocument;
+          if (!doc) return;
+          if (!doc.querySelector('link[data-risk-skin]')) {
+            const link = doc.createElement("link");
+            link.rel = "stylesheet";
+            link.href = "/versions/risk-skin.css";
+            link.dataset.riskSkin = "1";
+            doc.head.appendChild(link);
+          }
+          // 上游文案含内部协作措辞（如"队友在线"），统一清洗为中性表达
+          const scrub = () => {
+            const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT);
+            const nodes = [];
+            let node;
+            while ((node = walker.nextNode())) {
+              if (/队友/.test(node.nodeValue)) nodes.push(node);
+            }
+            nodes.forEach(n => {
+              n.nodeValue = n.nodeValue.replace(/队友在线/g, "在线").replace(/队友/g, "协作");
+            });
+          };
+          scrub();
+          new MutationObserver(scrub).observe(doc.body, { childList: true, subtree: true, characterData: true });
+        } catch (_) { /* 注入失败不影响功能 */ }
+      });
+    }
+  }
   window.scrollTo(0, 0);
 }
 document.querySelectorAll("[data-view-btn]").forEach(btn => {
