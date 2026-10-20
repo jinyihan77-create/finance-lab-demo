@@ -1,0 +1,8 @@
+{
+  "mode": "STATIC_SIMULATION_ONLY",
+  "backend": "NOT_CONNECTED",
+  "realModelCalls": false,
+  "execution_allowed": false,
+  "product": "personal-investment-only",
+  "assistantIntegration": "UI_READY_OWNER_CONFIGURATION_REQUIRED"
+}

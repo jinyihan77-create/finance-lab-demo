@@ -1,0 +1,134 @@
+{
+  "release": "tinglan-protected-live-entry-2026-10-20",
+  "mode": "STATIC_SIMULATION_ONLY",
+  "backend": "STATIC_PREVIEW_WITH_PROTECTED_LIVE_LINK",
+  "realModelCalls": false,
+  "sourceRepository": "Fintechathon-agent/Fintechathon-agent",
+  "sourceBaseCommit": "176ffbadf6bf060efb49b624238562c100f9bf2f",
+  "reviewedTeamMain": "c243950a8b3bba1b38fd18647e336627d982d14f",
+  "sourceState": "isolated candidate overlay in team-staging/ui/investment-only-20261018",
+  "files": [
+    {
+      "file": ".nojekyll",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "build-info.json",
+      "sha256": "317b6abe9f81019fbd5eefdc9a1058c59eed36a449b141622f7a5dd28b62a2df"
+    },
+    {
+      "file": "catalog.html",
+      "sha256": "287cfa246d652c930efc0302d9a633416acb6a7e7e0640f26aab5a7ba91f3b40"
+    },
+    {
+      "file": "index.html",
+      "sha256": "df8bbbe781ee07d1f61a0251c766d25abea50f705755cca9d61a1f067a0dec9c"
+    },
+    {
+      "file": "investment.html",
+      "sha256": "9d03a441dea13fd81f6e09ab9a38220309e4b4cbd798dfcdb08cce263306c86a"
+    },
+    {
+      "file": "landing.html",
+      "sha256": "8328f3e1582e55099da071938dca434514224283399c302bf4e87585b2d18693"
+    },
+    {
+      "file": "merchant/index.html",
+      "sha256": "166d6d9d096294be2d89eef4e1520b2c6e4b46d8bd1d26ba2598a22c42e04723"
+    },
+    {
+      "file": "merchant.html",
+      "sha256": "c8b831c05a1fda3c51c2c30c36095ea5db9e9a84c41b41e4bd2a4a944494324b"
+    },
+    {
+      "file": "not-found.html",
+      "sha256": "deff849db8c60fc3669c6f8d06fcc31e40c625d1583775d6aa774fa5a2c3ac24"
+    },
+    {
+      "file": "tinglan-config.json",
+      "sha256": "5dbc74f88519539a1370a9b8e4dc42f05a6d0334fcac9b3fdcc971205e38a43c"
+    },
+    {
+      "file": "versions/api.js",
+      "sha256": "b7719f00d480ad9973e049d5c3eee044db4b7ff5953773b047f7a8d919c09e14"
+    },
+    {
+      "file": "versions/archive.js",
+      "sha256": "b1ef4976e5b5bd4433fc2c41e9302e7c8d54ee6923736304fb03cbbbc871023e"
+    },
+    {
+      "file": "versions/common.js",
+      "sha256": "9aa7c825385e27effde3dba62d43ffd037725188de809eb1049b7121f6b33edb"
+    },
+    {
+      "file": "versions/favicon.svg",
+      "sha256": "ca56ebcd31ed874d312ff5a98777f5fb92dbe45b801d70c4cd033b0bba365399"
+    },
+    {
+      "file": "versions/glass.css",
+      "sha256": "a54c2e2f82dfd4aea9d1d46d91b5d296f017b25d7e172114799ff125f185fafd"
+    },
+    {
+      "file": "versions/investment.js",
+      "sha256": "d6b5a3bb04042d7c19b2ba5858cf302d935b0344b9600645e0c01eb8ebda0183"
+    },
+    {
+      "file": "versions/kosx.css",
+      "sha256": "04dd2743cc6c9363d9f7f83a73468c90a412304ebe344ddb6d4eba92122de709"
+    },
+    {
+      "file": "versions/landing.css",
+      "sha256": "b141ae3f830c048f5dd2513996868799b4df39a9e640fa758c8359a946b8ba7c"
+    },
+    {
+      "file": "versions/landing.js",
+      "sha256": "a7e191b6b73467f75daad729c37582570c39f6228dd37e7fc66afbf6d1f4c95a"
+    },
+    {
+      "file": "versions/merchant.html",
+      "sha256": "6a9765d0428183bdc12e000c5ae4b624850ea64ce1ad1c8df83a99dbc5af457d"
+    },
+    {
+      "file": "versions/presentation.mjs",
+      "sha256": "3c101315ff25b886969f5a88dee77d39ecdf0d3ba6a35c86c64a47ff4f4404d8"
+    },
+    {
+      "file": "versions/product-overrides.css",
+      "sha256": "dda507e6f78a6ea2d04f475acc9a36be6eb13343a7c66bf9c2709cd139b30d99"
+    },
+    {
+      "file": "versions/static-preview.css",
+      "sha256": "d7bd2cc13675f2e7ac235447edaa5e213d4878bc9ebd6d34d811608052aaedc5"
+    },
+    {
+      "file": "versions/style.css",
+      "sha256": "3ad7936e65dca78942e26724de6ceece560d2e640d0e5da9b3fd6b71dbcf7998"
+    },
+    {
+      "file": "versions/tinglan-client.mjs",
+      "sha256": "d49a303dc6160c7b258a1d8c383971a5084a98e3400cf65e109b5d75957f90c4"
+    },
+    {
+      "file": "versions/tinglan-transport.js",
+      "sha256": "09e8aecd4f5e3f1a0451b92580b6ea3a244487ffd065b9035fc678beb00ca229"
+    },
+    {
+      "file": "versions/tinglan-widget.mjs",
+      "sha256": "89880ed50b56915b741a007fa07706610fe5857831684577a6fda875d43d232d"
+    },
+    {
+      "file": "versions/tinglan.css",
+      "sha256": "fb9907f8860eaecba2f217cc2af236d20fc5e3dfd4ef642bca3cdd467f4bf7d1"
+    },
+    {
+      "file": "versions/tokens.css",
+      "sha256": "d7f804216bca1e98d37ab3764790b9bdb59a15d615e19fbce70e4ca737c76136"
+    },
+    {
+      "file": "versions/ui-model.mjs",
+      "sha256": "36a541873a0b49b455aca9fe8c380eb0c145c87e18ed499476e86117196eaff6"
+    }
+  ],
+  "liveEntry": "https://xinlan-qwen38-share.lixjanus526.workers.dev/investment-only/investment.html#ai-assistant",
+  "liveAcceptance": "REAL_CLOUD_BROWSER_CHAIN_PASSED"
+}

@@ -1,0 +1,172 @@
+{
+  "sourceRepository": "Fintechathon-agent/Fintechathon-agent",
+  "sourceBranch": "codex/ui-site-integration-v1",
+  "sourceCommit": "a007143ae5fd22750442e3ce79880aceec3baf56",
+  "reviewedMain": "e51ce9bb4e30cd409414ef55f8f9a5eddd065dda",
+  "mode": "PREVIEW_STATIC_UI_ONLY",
+  "backend": "NOT_CONNECTED",
+  "files": [
+    {
+      "file": ".nojekyll",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "build-info.json",
+      "sha256": "569988676928615a81a0a5c0adc497b25a85e823f03cbb2f0af5e6f05cad650c"
+    },
+    {
+      "file": "catalog.html",
+      "sha256": "f6a22f0a6dfb9868b9583af87c4eb15eb7fa86f4343b93553b86efc8ed90c6f9"
+    },
+    {
+      "file": "index.html",
+      "sha256": "2e417fc4a5b1dd5abf65945adc8b1e15b476328a4a7f1c00415b68df8e2701a3"
+    },
+    {
+      "file": "investment-v0.10.html",
+      "sha256": "ad10751b843074c43dac1ef1bba03e23a0d6bf28aacd8bd7c2629487d9cde486"
+    },
+    {
+      "file": "investment.html",
+      "sha256": "60d472218a5e7d0ba1f1498369563c6e1c8ea012898d6df738becca9f27d58e7"
+    },
+    {
+      "file": "landing.html",
+      "sha256": "f79f98d956f6328125e01a077302a028e1e5aa6e5817f15b6ff2024d58b74815"
+    },
+    {
+      "file": "merchant.html",
+      "sha256": "1d274ac911d8f7463946e23acf0d37fd62edbf62b2f2483db3220704ac9b165a"
+    },
+    {
+      "file": "README.md",
+      "sha256": "19738baad50df39024a5088c84188fabe0b6416a79aa69bd71cc7fa86470c360"
+    },
+    {
+      "file": "risk-workbench.html",
+      "sha256": "866a9d38ee2e287ec7640e7964c07a32304b15aac91b4672c877092ccc2a9b41"
+    },
+    {
+      "file": "versions/archive.js",
+      "sha256": "b1ef4976e5b5bd4433fc2c41e9302e7c8d54ee6923736304fb03cbbbc871023e"
+    },
+    {
+      "file": "versions/common.js",
+      "sha256": "11356ddb8a4e1aea51e62ca7a29513bd0be27f305374ea3000aa3f78f2145915"
+    },
+    {
+      "file": "versions/favicon.svg",
+      "sha256": "867f5f46d3301e8f4c74ec27c397408dd9ed7a9bc0e56f6454e9a8baa95fa204"
+    },
+    {
+      "file": "versions/glass.css",
+      "sha256": "ef937b275e7de90b742306e4155d3c0df169d4405c38cff47e7d746f7f74f40c"
+    },
+    {
+      "file": "versions/investment-legacy.js",
+      "sha256": "93f39fd39062e891cf088a7e655a7f9f9eb4e12e6408f71d0af0fc2f2a1d0292"
+    },
+    {
+      "file": "versions/investment.js",
+      "sha256": "8e76de47d4c307c0fb9b45502ff3094ed2de897bca7ff69a1acf3e8374f16bb2"
+    },
+    {
+      "file": "versions/landing.css",
+      "sha256": "cbf35390e76db3698330a254e519ebbed2aa556f872175cc8d5500cc012cfd7c"
+    },
+    {
+      "file": "versions/landing.js",
+      "sha256": "89cfdf712ab66e4684bb95725905c549c7e2081602330abd95fa0f862d2837e3"
+    },
+    {
+      "file": "versions/presentation.mjs",
+      "sha256": "3c101315ff25b886969f5a88dee77d39ecdf0d3ba6a35c86c64a47ff4f4404d8"
+    },
+    {
+      "file": "versions/preview.css",
+      "sha256": "87b4107cdf62a4060752fa70013fa86180d185f96e5ea7dfcf45cde6f31eea7a"
+    },
+    {
+      "file": "versions/product-overrides.css",
+      "sha256": "2312064f7fd803535212fdaffc445d2ab355f618d4b3dac21274507e764a0e5b"
+    },
+    {
+      "file": "versions/site-context.mjs",
+      "sha256": "65e13b673fb67e8991caee1740dfdf0574a1a0ba2c3d1d9eab56f9ec2892ad00"
+    },
+    {
+      "file": "versions/site-shell.css",
+      "sha256": "8ad1046395e9b195700bdc430d9572273c86b64cb40388cbe422d2ffc1a631b9"
+    },
+    {
+      "file": "versions/style.css",
+      "sha256": "8d875cac265f673e2408a48fc0238050b68553ab7ccd082ac89e5a8b7eb5f519"
+    },
+    {
+      "file": "versions/team-logo-transparent.png",
+      "sha256": "fba7a4e1b36b9f8f40057cf655f446009c5943bd6bbfbd1d0f3d6d0b14b246d6"
+    },
+    {
+      "file": "versions/tokens.css",
+      "sha256": "83aebf27a001e1bd8cceb871c73e69891cb9f0134d62907af1a243441e81db35"
+    },
+    {
+      "file": "versions/workspace-investment.js",
+      "sha256": "655daa9cbeb9c5b0e6e334517d1e96d127ac5c0d0145f66a7d54dfb36c29ec4c"
+    },
+    {
+      "file": "versions/workspace-model.mjs",
+      "sha256": "6cd6dab59970da850e8b4d04dae3dd9f955d1026245fa1d1b1e257b3f1580890"
+    },
+    {
+      "file": "versions/workspace.css",
+      "sha256": "7cd5efcbf48e381caca4ac2668fe8dfc5ce63c44bf17ea486fa890b494178b02"
+    },
+    {
+      "file": "versions/workspace.js",
+      "sha256": "09179924be248d6976aeccfde5094a54ac93d5bc8b3a4a755320a41ab76741b5"
+    },
+    {
+      "file": "workspace.html",
+      "sha256": "f672b52526155d7adf6faf1d83c43cd25a52aad6cc3a4fcbb4b5f15ff400557d"
+    },
+    {
+      "file": ".gitignore",
+      "sha256": "74915c29af71239177f006327120d0c757edd618353228c4af5f0ee23ce8d78a"
+    },
+    {
+      "file": "merchant/index.html",
+      "sha256": "586a4c73292ba0dbb42803d7a7144db37638f96631012772f2340a04a6fc843d"
+    },
+    {
+      "file": "versions/merchant.html",
+      "sha256": "032c9f33404070f919513543b565a14a9216787f48757553184d474aff768b02"
+    },
+    {
+      "file": ".gitattributes",
+      "sha256": "97c257bc6c2fd9a1ff838c5b9b2470d8bfc17adc6643ff4503d513b18ef01b6f"
+    }
+  ],
+  "scan": {
+    "rules": [
+      "privateKey",
+      "githubToken",
+      "providerKey",
+      "credentialLiteral"
+    ],
+    "hits": []
+  },
+  "packaging": [
+    "Preview notice",
+    "Legacy independent Risk tool unavailable; no cross-service calls",
+    "Static-only source disclosure"
+  ],
+  "publicationUpdate": {
+    "date": "2026-10-18",
+    "candidate": "investment-only/investment.html",
+    "backend": "NOT_CONNECTED",
+    "preservedWorkspace": true,
+    "merchantRetired": true,
+    "assistant": "TINGLAN_UI_READY_OWNER_CONFIGURATION_REQUIRED"
+  }
+}

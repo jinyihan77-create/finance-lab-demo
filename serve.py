@@ -19,6 +19,9 @@ import json
 import mimetypes
 import os
 import sys
+import secrets
+import re
+from http.cookies import SimpleCookie
 import urllib.error
 import urllib.request
 import webbrowser
@@ -75,6 +78,7 @@ RISK_PREFIXES = (
 )
 
 mimetypes.add_type("text/javascript", ".js")
+mimetypes.add_type("text/javascript", ".mjs")
 mimetypes.add_type("text/css", ".css")
 mimetypes.add_type("image/svg+xml", ".svg")
 
@@ -90,9 +94,11 @@ class Handler(BaseHTTPRequestHandler):
     # ---- 静态文件 ----
     def _static(self, rel: str) -> None:
         if rel in ("", "/"):
-            rel = "landing.html"
+            rel = "workspace.html"
         target = (ROOT / rel.lstrip("/")).resolve()
-        if not str(target).startswith(str(ROOT)) or not target.is_file():
+        if (not target.is_relative_to(ROOT) or not target.is_file()
+                or any(part.startswith('.') for part in target.relative_to(ROOT).parts)
+                or target.suffix.lower() not in ('.html','.css','.js','.mjs','.svg','.png','.jpg','.jpeg','.ico','.json','.woff2')):
             self._json(404, {"error": {"code": "NOT_FOUND", "message": "not found"}})
             return
         body = target.read_bytes()
@@ -157,12 +163,58 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Cache-Control", NO_CACHE)
+        if getattr(self, "assistant_cookie", None):
+            self.send_header("Set-Cookie", self.assistant_cookie)
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
 
+    def _assistant(self, method, path):
+        # Private local persistence is served only to loopback clients.
+        if self.client_address[0] not in ('127.0.0.1','::1'):
+            return self._json(403, {'error':{'message':'本地对话服务仅允许本机访问。'}})
+        if urlparse('http://'+self.headers.get('Host','')).hostname not in ('127.0.0.1','localhost','::1'):
+            return self._json(403, {'error':{'message':'请通过本机地址打开工作空间。'}})
+        origin=self.headers.get('Origin')
+        if origin and origin != 'http://'+self.headers.get('Host',''):
+            return self._json(403, {'error':{'message':'请求来源不匹配。'}})
+        cookie=SimpleCookie()
+        try:cookie.load(self.headers.get('Cookie',''))
+        except Exception:pass
+        value=cookie.get('finance_session')
+        session=value.value if value and re.fullmatch(r'[a-f0-9]{64}',value.value) else secrets.token_hex(32)
+        self.assistant_cookie='finance_session='+session+'; HttpOnly; SameSite=Strict; Path=/api/assistant; Max-Age=31536000'
+        service=self.server.assistant
+        try:
+            if method=='GET' and path=='/api/assistant/state':
+                return self._json(200,{'state':service.state(session)})
+            if method=='GET' and path=='/api/assistant/export':
+                body=service.export(session)
+                self.send_response(200)
+                self.send_header('Content-Type','text/csv; charset=utf-8')
+                self.send_header('Content-Disposition','attachment; filename="finance-journal.csv"')
+                self.send_header('Cache-Control','no-store')
+                self.send_header('Content-Length',str(len(body)))
+                self.end_headers();self.wfile.write(body);return
+            if method=='POST' and path in ('/api/assistant/message','/api/assistant/record'):
+                if self.headers.get('X-Finance-Request')!='1' or not self.headers.get('Content-Type','').startswith('application/json'):
+                    return self._json(403,{'error':{'message':'请求格式不正确。'}})
+                length=int(self.headers.get('Content-Length','0'))
+                if not 0<length<=65536:return self._json(413,{'error':{'message':'这段内容太长，请分段发送。'}})
+                body=json.loads(self.rfile.read(length))
+                if not isinstance(body,dict):raise ValueError('请求内容必须为对象。')
+                result=service.message(session,body) if path.endswith('/message') else service.change(session,body)
+                return self._json(200,result)
+            return self._json(404,{'error':{'message':'没有找到该服务。'}})
+        except (ValueError,TypeError) as exc:
+            return self._json(400,{'error':{'message':str(exc)}})
+        except Exception:
+            return self._json(500,{'error':{'message':'保存暂时失败，草稿已保留。请稍后重试。'}})
+
     def do_GET(self):  # noqa: N802
         path = urlparse(self.path).path
+        if path.startswith('/api/assistant/'):
+            return self._assistant('GET',path)
         if any(path == p or path.startswith(p + "/") for p in RISK_PREFIXES):
             return self._proxy("GET", self.path, base=RISK_UPSTREAM)
         if path.startswith("/api/"):
@@ -175,6 +227,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):  # noqa: N802
         path = urlparse(self.path).path
+        if path.startswith('/api/assistant/'):
+            return self._assistant('POST',path)
         if any(path == p or path.startswith(p + "/") for p in RISK_PREFIXES):
             return self._proxy("POST", self.path, base=RISK_UPSTREAM)
         if path.startswith("/api/"):
@@ -191,19 +245,24 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--backend", default=BACKEND, help="团队银行后端地址")
     parser.add_argument("--open", action="store_true", help="启动后打开浏览器")
+    parser.add_argument("--assistant-db", default=str(ROOT / 'data' / 'assistant.sqlite'), help="本地私有会话数据库")
     args = parser.parse_args(argv)
 
     BACKEND = args.backend
+    from assistant.storage import Store
+    from assistant.service import Assistant
 
     try:
         server = ThreadingHTTPServer((args.host, args.port), Handler)
+        server.assistant = Assistant(Store(args.assistant_db))
     except OSError as exc:
         print(f"端口 {args.port} 被占用或不可用：{exc}")
         return 1
 
     url = f"http://{args.host}:{args.port}/"
     print(f"Finance Lab 演示站已启动：{url}")
-    print(f"银行真链路代理 → {BACKEND}（白名单 /api 路由；未启动时前端回退演示模式）")
+    print("对话入口：本机持久化收支与会话；投资分析连接团队模型，失败明确提示。")
+    print(f"旧任务台后端 → {BACKEND}（仅旧页面包含演示回退）")
     print("按 Ctrl+C 停止。")
     if args.open:
         webbrowser.open(url)

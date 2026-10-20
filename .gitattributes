@@ -1,0 +1,2 @@
+# Preserve the exact public upstream snapshot and its SHA256 provenance.
+upstream-preview/** -text whitespace=cr-at-eol

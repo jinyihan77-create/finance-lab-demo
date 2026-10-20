@@ -1,0 +1,41 @@
+{
+  "paidCalls": 0,
+  "secretsLoaded": false,
+  "results": [
+    {
+      "name": "health",
+      "http": 200,
+      "body": "{\"status\":\"ok\",\"service\":\"core-agent\",\"contract_version\":\"investment-agent.v1\",\"review_endpoint\":\"/api/review\",\"docs\":\"/docs\",\"model\":{\"provider\":\"aliyun_bailian\",\"name\":\"qwen3.8-flash\",\"configured\":false},\"audit_storage\":\"durable_object\"}"
+    },
+    {
+      "name": "page",
+      "http": 200,
+      "body": "HTML omitted"
+    },
+    {
+      "name": "config",
+      "http": 200,
+      "body": "{\"endpoint\":\"/api/review\",\"model\":\"qwen3.8-flash\",\"mode\":\"CLOUDFLARE_ACCESS\"}"
+    },
+    {
+      "name": "status",
+      "http": 503,
+      "body": "{\"error\":{\"code\":\"MODEL_NOT_CONFIGURED\",\"message\":\"百炼服务或测试预算尚未启用。\"},\"execution_allowed\":false}"
+    },
+    {
+      "name": "unconfigured-review",
+      "http": 503,
+      "body": "{\"error\":{\"code\":\"MODEL_NOT_CONFIGURED\",\"message\":\"百炼服务或测试预算尚未启用。\"},\"execution_allowed\":false}"
+    },
+    {
+      "name": "preflight",
+      "http": 204,
+      "body": ""
+    },
+    {
+      "name": "bad-origin",
+      "http": 403,
+      "body": "{\"error\":{\"code\":\"ORIGIN_DENIED\",\"message\":\"当前网页未获得访问授权。\"},\"execution_allowed\":false}"
+    }
+  ]
+}

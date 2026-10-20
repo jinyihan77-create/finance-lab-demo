@@ -1,89 +1,17 @@
 <!doctype html>
-<html lang="zh-CN" data-source="backend">
-<head><script src="versions/api.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>银行 AI 智能体 · 安全任务执行台</title><link rel="stylesheet" href="versions/style.css"><link rel="stylesheet" href="versions/product-overrides.css"><meta name="theme-color" content="#0a0a0a"><meta name="description" content="银行 AI 智能体安全任务执行台：点卡片直接办，自然语言 → 任务 DAG → 绿黄红权限分级 → 人在环确认 → 可回放回执。"><link rel="icon" href="versions/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="versions/kosx.css"><link rel="stylesheet" href="versions/glass.css"><link rel="stylesheet" href="versions/tokens.css"><link rel="stylesheet" href="versions/console.css"><script type="module" src="versions/archive.js"></script></head>
-<body class="banking-product archive-workbench" data-workbench="banking">
-<a class="skip-link" href="#main-content">跳到主要内容</a>
-<aside class="sidebar"><a class="lab-brand" href="landing.html" aria-label="Finance Lab 展示首页"><span class="lab-symbol">K<span><svg class="arrow-ne" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M3 9 9 3M4.5 3H9v4.5"/></svg></span></span><span>FINANCE<span class="brand-lab">LAB<span class="orange-dot"></span></span></span></a><div class="sidebar-caption">FINTECHATHON / 2026</div>
-<nav class="workspace-switch" aria-label="按角色切换产品">
-  <p class="role-group">个人用户</p>
-  <a href="workspace.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6z"/><path d="M8 12l3 3 5-6"/></svg><span>银行 AI 智能体</span><span class="nav-number">01</span></a>
-  <a href="investment.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 4v16h17"/><path d="M8 14l4-5 4 3 5-7"/></svg><span>理财旗舰</span><span class="nav-number">02</span></a>
-  <p class="role-group">小店店主</p>
-  <a href="merchant.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 10h18l-2-6H5z"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg><span>小店经营助手</span><span class="nav-number">03</span></a>
-</nav>
-<div class="sidebar-caption section-label">WORKSPACE / 工作空间</div>
-<nav class="section-nav" aria-label="本页导航"><a href="#" data-view="tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6z"/><path d="M8 12l3 3 5-6"/></svg>办业务</a><a href="#" data-view="bills"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h4"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>我的账单</a><a href="#" data-view="results"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 4v16h17"/><path d="M8 14l4-5 4 3 5-7"/></svg>任务结果</a><a href="#" data-view="pending"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 8v4l3 3"/><path d="M12 3a9 9 0 1 0 9 9"/></svg>待确认</a><a href="#" data-view="brief"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h4"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>今日简报</a><a href="#" data-view="audit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 8v4l3 3"/><path d="M12 3a9 9 0 1 0 9 9"/></svg>审计回放</a><a href="catalog.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/><path d="M3 14h7v7H3z"/><path d="M14 14h7v7h-7z"/></svg>产品导航</a></nav>
-<div class="sidebar-caption section-label">扩展能力</div>
-<nav class="section-nav" aria-label="扩展能力"><a href="#" data-view="risk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6z"/><path d="M8 12l3 3 5-6"/></svg>在线风控工作台</a><a href="/compare" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 4v16h17"/><path d="M8 14l4-5 4 3 5-7"/></svg>安全任务台·对比版 ↗</a><a href="/evidence" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/><path d="M3 14h7v7H3z"/><path d="M14 14h7v7h-7z"/></svg>视觉证据板 ↗</a></nav><div class="sidebar-bottom"><p class="sidebar-footnote">FINANCE LAB<br>银行 AI 智能体 · 比赛演示</p></div></aside>
-<main class="compact-main" id="main-content" tabindex="-1">
-<section class="hero compact-hero" id="overview"><div><p class="eyebrow">01 / BANKING TASK CONSOLE</p><h1>一句话，办完<span class="accent-text">一件银行事。</span></h1><p class="muted hero-lede">点下面的卡片，直接看结果；也可以自己说一句。</p></div><div class="hero-actions"><span class="product-stamp" id="conn-stamp">连接检测中…</span><button type="button" class="button hero-cta" data-view-btn="tasks">开始办业务 <span><svg class="arrow-ne" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M3 9 9 3M4.5 3H9v4.5"/></svg></span></button></div></section>
-<div class="data-strip" id="account-strip"><span class="archive-skeleton" role="status" aria-label="正在读取账户状态"></span></div>
-<nav class="console-nav" aria-label="工作台导航">
-  <button type="button" class="console-tab is-active" data-view-btn="tasks">🧭 办业务</button>
-  <button type="button" class="console-tab" data-view-btn="bills">📄 我的账单</button>
-  <button type="button" class="console-tab" data-view-btn="results">📈 结果</button>
-  <button type="button" class="console-tab" data-view-btn="pending">✋ 待确认 <span class="nav-badge" id="pending-badge" hidden>0</span></button>
-  <button type="button" class="console-tab" data-view-btn="brief">📰 简报</button>
-  <button type="button" class="console-tab" data-view-btn="risk">🛡️ 风控</button>
-  <button type="button" class="console-tab" data-view-btn="audit">🗂 审计</button>
-</nav>
-<div id="backend-notice" class="notice-note" hidden><p><b>团队后端未连接（演示模式）。</b>请在团队仓库运行 <code>python web/launch.py</code>（127.0.0.1:8765）后刷新本页。当前页面只展示静态能力说明。</p></div>
-<section class="console-view is-active" data-view="tasks" id="view-tasks">
-<section class="panel" id="quick-panel">
-<div class="row"><div><p class="section-kicker">QUICK TASKS / 一键任务</p><h2>想办什么，点一下</h2></div></div>
-<div class="quick-grid quick-main" id="quick-grid" aria-label="一键任务"></div>
-<details class="compact-detail"><summary>更多任务</summary><div class="quick-grid" id="quick-more-grid" aria-label="更多任务"></div></details>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="dark"><title>Finance Lab · 生活与投资</title><link rel="icon" href="versions/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="versions/tokens.css"><link rel="stylesheet" href="versions/conversation.css"></head>
+<body>
+<a class="skip-link" href="#message">跳到输入框</a>
+<div class="app-shell" id="app">
+<aside class="sidebar" id="sidebar" aria-label="会话导航"><a class="brand" href="workspace.html"><span class="brand-mark">K</span><span>Finance Lab<span class="brand-caption">生活与投资</span></span></a><button class="new-chat" id="new-chat"><span aria-hidden="true">＋</span>开启新对话</button><div class="library-nav"><button data-panel="overview"><span class="nav-mark" aria-hidden="true">◷</span>我的概览</button><button data-panel="ledger"><span class="nav-mark" aria-hidden="true">▤</span>生活账本<span id="ledger-count" class="nav-count"></span></button><button data-panel="investment"><span class="nav-mark" aria-hidden="true">↗</span>投资计划</button><button data-panel="memory"><span class="nav-mark" aria-hidden="true">◇</span>记住的事</button></div><div class="history-heading">最近对话</div><nav id="history" class="history" aria-label="最近对话"><p class="empty-history">从今天的一件小事开始。</p></nav><div class="sidebar-bottom"><button id="about" class="workspace-account"><span class="account-icon">我</span><span>我的工作空间<small>本机保存 · 由你掌握</small></span><span aria-hidden="true">···</span></button></div></aside>
+<button id="sidebar-scrim" class="sidebar-scrim" aria-label="收起会话导航" hidden></button>
+<main class="workspace"><header class="topbar"><div class="title-group"><button id="menu-toggle" class="icon-button" aria-label="展开会话导航" aria-controls="sidebar" aria-expanded="false">☰</button><span id="chat-title">新对话</span></div><button id="open-results" class="quiet" data-panel="overview"><span aria-hidden="true">▤</span> 我的资料</button></header>
+<div class="workspace-body"><section class="chat-stage" aria-label="对话"><div class="chat-scroll" id="chat-scroll"><div class="welcome" id="welcome"><span class="welcome-mark" aria-hidden="true">K</span><p class="greeting">生活里的每一笔，都可以慢慢理清。</p><h1>不用先整理，<br>从你想说的开始。</h1><p class="welcome-copy">把收入、花销和投资打算一起告诉我。<br>我来归档、记住重点，陪你看清下一步。</p></div><div id="messages" class="messages" role="log" aria-live="polite" aria-relevant="additions"></div><div id="working" class="working" role="status" hidden><span class="working-dot"></span><span>正在整理你说的事…</span></div></div>
+<div class="composer-wrap"><div id="edit-context" class="edit-context" hidden><span></span><button id="cancel-edit" aria-label="取消修改">×</button></div><p id="error" class="error" role="alert" hidden></p><form id="composer"><label class="sr-only" for="message">告诉我今天发生的事</label><textarea id="message" rows="2" maxlength="6000" placeholder="今天发了工资，买了会员，还想拿一部分做投资…"></textarea><div class="composer-toolbar"><span id="save-state">说一段话就好</span><button type="submit" id="send" aria-label="发送消息"><span>发送</span><span aria-hidden="true">↑</span></button></div></form><div id="suggestions" class="suggestions"><button data-suggestion="mixed">工资、花销和投资一起记 <span>↗</span></button><button data-suggestion="summary">看看这个月的收支 <span>↗</span></button><button data-suggestion="memory">你记住了什么 <span>↗</span></button></div><p class="composer-note">记录可随时纠正。投资计划不等于成交，资金操作需要你确认。</p></div>
 </section>
-<section class="panel" id="say-panel">
-<div class="row"><div><p class="section-kicker">OR JUST SAY IT / 或者自己说</p><h2>打一句话也行</h2></div></div>
-<form id="task-form">
-<div class="nl-box"><textarea id="question" rows="2" maxlength="120" placeholder="这个月账单分析 ｜ 有没有异常交易 ｜ 给王芳转500元 ｜ 挂失尾号8888的卡"></textarea></div>
-<div class="example-chips" id="example-chips" aria-label="示例请求"></div>
-<div class="form-submit"><button id="run" type="submit" disabled>发起 →</button></div>
-<p class="small danger" id="load-error" role="alert" hidden></p>
-<div id="run-feedback" class="inline-feedback" role="status" hidden></div>
-</form></section>
-</section>
-<section class="console-view" data-view="bills" id="view-bills">
-<section class="panel" id="bill-source-panel">
-<div class="row"><div><p class="section-kicker">MY STATEMENTS / 我的账单</p><h2>账单和流水在哪个 App？点一下我教你看</h2></div><span class="tag">本地解析 · 数据不上传</span></div>
-<div class="source-grid" id="source-grid" aria-label="账单来源">
-  <button type="button" class="source-card" data-source="alipay">📱<b>支付宝</b><small>账单导出</small></button>
-  <button type="button" class="source-card" data-source="wechat">💬<b>微信支付</b><small>账单导出</small></button>
-  <button type="button" class="source-card" data-source="bank">🏦<b>银行 App</b><small>流水导出</small></button>
-  <button type="button" class="source-card" data-source="file">📄<b>上传文件</b><small>CSV 本地解析</small></button>
-</div>
-<div id="source-guide" hidden></div>
-<div class="actions row"><button type="button" class="primary" id="demo-bill-run">📊 分析演示账单</button><button type="button" class="secondary" id="pick-file">📄 选择账单文件</button><input type="file" id="bill-file" accept=".csv,.txt,.json" hidden></div>
-<div id="csv-result" hidden></div>
-</section>
-</section>
-<section class="console-view" data-view="results" id="view-results">
-<div id="result-anchor" class="analysis-empty"><span class="empty-symbol"><svg class="arrow-ne" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M3 9 9 3M4.5 3H9v4.5"/></svg></span><div><h2>还没有任务结果</h2><p>去「办业务」点一张卡片，结果会显示在这里。</p></div><span class="terminal-label">READY WHEN YOU ARE</span></div>
-<div id="results" hidden>
-<section class="snapshot-card" id="result-summary"><div class="row"><div><p class="section-kicker">这次任务</p><h2>结果一眼看清</h2></div><span class="small muted">金额与权限由确定性闸门决定</span></div><div class="metrics compact-metrics" id="result-metrics"></div></section>
-<section class="result-verdict"><div><p class="section-kicker">执行结论</p><h2 id="verdict-title"></h2><p id="verdict-copy"></p><div id="inline-pending"></div><details class="why-details"><summary>任务是怎么一步步执行的</summary><div id="dag-list"></div><p class="small muted" id="intent-note"></p></details></div><span class="verdict-tag" id="verdict-tag"></span></section>
-<details class="panel" id="evidence-panel"><summary>任务数据明细</summary><p class="small">金额与结论由后端确定性闸门从演示数据计算，AI 不生成数字。</p><div id="evidence-data"></div></details>
-</div>
-</section>
-<section class="console-view" data-view="pending" id="view-pending">
-<section class="panel" id="pending-panel"><div class="row"><div><p class="section-kicker">需要你点头的事</p><h2>待确认</h2></div><span class="tag" id="pending-count">0</span></div><div id="pending-list" class="pending-list"><p class="small muted">暂无。</p></div></section>
-<section class="panel" id="tier-panel"><div class="row"><div><p class="section-kicker">SAFETY / 权限分级</p><h2>为什么有的操作要你确认</h2></div></div><div id="tier-matrix" class="tier-matrix"></div></section>
-</section>
-<section class="console-view" data-view="brief" id="view-brief">
-<section class="panel" id="brief-panel"><div class="row"><div><p class="section-kicker">DAILY BRIEF / 今日简报</p><h2>今天的市场与组合</h2></div><button id="refresh-brief" class="secondary">刷新</button></div><div id="brief-box" class="brief-box"><p class="small muted">读取中…</p></div><p class="small muted">简报由团队市场简报管线每日自动生成（演示数据），不构成投资建议。</p></section>
-</section>
-<section class="console-view" data-view="risk" id="view-risk">
-<section class="panel" id="risk-panel">
-<div class="row"><div><p class="section-kicker">RISK WORKBENCH / 在线风控工作台</p><h2>风险检查与模拟执行（团队公网部署）</h2></div><span class="tag">已内嵌 · 同源代理</span></div>
-<div class="risk-bar"><span class="small muted">健康检查 → 风险判断 → 用户确认 → 模拟执行 → 审计，一条决策链。虚构数据，不连接真实账户。</span><a class="secondary" href="https://fund-risk-workbench.panxintian44.chatgpt.site/risk" target="_blank" rel="noopener">新窗口打开 ↗</a></div>
-<div class="risk-frame-wrap"><iframe id="risk-frame" title="在线风控工作台" loading="lazy" referrerpolicy="no-referrer"></iframe></div>
-<div id="risk-fallback" hidden><p class="small muted">公开演示版没有内嵌代理，请在下方按钮打开风控工作台（跳转到公网部署）。</p><a class="primary" href="https://fund-risk-workbench.panxintian44.chatgpt.site/risk" target="_blank" rel="noopener">打开在线风控工作台 ↗</a></div>
-</section>
-</section>
-<section class="console-view" data-view="audit" id="view-audit">
-<section class="panel" id="audit-panel"><div class="row"><div><p class="section-kicker">AUDIT / 审计回放</p><h2>每一步都有记录</h2></div><button id="refresh-audit" class="secondary">刷新</button></div><div id="breaker-box" class="breaker-box"></div><div id="audit-list"></div></section>
-</section>
-</main>
-<footer class="footer"><span>FINANCE LAB</span><span>银行 AI 智能体 · 演示环境：未发生真实资金转移 · 不发送真实短信/人脸 · 不构成投资建议</span></footer><div id="status" role="status" aria-live="polite"></div><script type="module" src="versions/workspace.js"></script>
-<noscript><p class="notice">此工作台需要 JavaScript 才能读取数据和完成交互，请启用后刷新。</p></noscript></body></html>
+<aside class="artifact-panel" id="artifact-panel" hidden aria-labelledby="panel-title"><div class="panel-header"><div><p class="panel-eyebrow">为你整理</p><h2 id="panel-title">我的概览</h2></div><button id="close-panel" class="icon-button" aria-label="关闭资料面板">×</button></div><div class="panel-tabs" role="tablist" aria-label="资料分类"><button role="tab" data-panel="overview">概览</button><button role="tab" data-panel="ledger">账本</button><button role="tab" data-panel="investment">投资</button><button role="tab" data-panel="memory">记忆</button></div><div id="panel-content" class="panel-content"></div></aside>
+</div></main></div>
+<dialog id="about-dialog" aria-labelledby="about-title"><div class="panel-header"><h2 id="about-title">你的工作空间</h2><button id="close-about" class="icon-button" aria-label="关闭说明">×</button></div><p>收支、偏好和对话保存在本机服务，刷新后可以继续。当前使用浏览器会话区分资料，尚未提供正式账户登录和跨设备同步。</p><p>收支由规则整理；点击或提出投资分析时，会把当前问题和必要财务摘要交给团队模型服务。模型失败会明确提示。</p><p>本版本没有连接真实银行、券商或优惠平台，不能自动成交、扣费或领券。</p><div class="about-links"><a href="upstream-preview/investment-only/investment.html" target="_blank" rel="noopener">查看 10 月 20 日原版页面 ↗</a><a href="workspace-legacy.html" target="_blank" rel="noopener">查看旧任务台 ↗</a></div></dialog>
+<script type="module" src="versions/conversation.js"></script><noscript>请启用 JavaScript 以使用对话和账本。</noscript>
+</body></html>
