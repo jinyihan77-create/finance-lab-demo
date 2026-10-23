@@ -1,0 +1,22 @@
+/* Shared brand treatment; existing page structure and behavior stay intact. */
+body.investment-product, body.merchant-product {
+  --ink:var(--text-primary); --muted:var(--text-secondary); --green:var(--signal-orange);
+  --paper:var(--canvas); --pale:#30251d; --line:#494039; --red:#ffa799;
+  background:var(--canvas);color:var(--text-primary);
+}
+.product-header {background:var(--canvas)!important;border-color:var(--line)!important}
+.site-logo {display:inline-block;width:64px;height:64px;background:url('./team-logo-transparent.png') center/contain no-repeat;flex-shrink:0}
+.product-header a {color:var(--text-primary)}
+.product-nav {display:flex;gap:20px;flex-wrap:wrap}
+.panel,.snapshot-card,.result-verdict,.cash-status,.cash-callout {background:var(--archive-surface)!important;color:var(--text-primary);border-color:var(--line)!important}
+input,select,textarea {background:#11100f!important;color:var(--text-primary)!important;border-color:var(--line)!important;color-scheme:dark}
+button,.button {background:var(--signal-orange);color:var(--text-on-signal)}
+button.secondary {background:var(--archive-surface);color:var(--text-primary)}
+table,td,th {border-color:var(--line)}
+th {background:var(--archive-surface)!important;color:var(--text-primary)!important}
+a {color:var(--signal-orange)}
+:focus-visible {outline:2px solid var(--signal-orange);outline-offset:4px}
+@media(max-width:600px){.product-header{flex-wrap:wrap;gap:12px}.product-nav{gap:16px}.site-logo{width:48px;height:48px}}
+@media(prefers-reduced-motion:no-preference){main{animation:site-arrive var(--motion-duration) var(--motion-ease)}@keyframes site-arrive{from{opacity:.6;transform:translateY(6px)}to{opacity:1;transform:none}}}
+body.investment-product,body.merchant-product{font-family:'Segoe UI','Microsoft YaHei',sans-serif}
+.product-stamp,.data-strip span{color:var(--text-secondary)!important;background:var(--archive-surface)!important}

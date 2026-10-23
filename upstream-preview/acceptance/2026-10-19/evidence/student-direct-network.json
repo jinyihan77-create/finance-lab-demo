@@ -1,0 +1,10 @@
+{
+  "time": "2026-10-19T06:20:18.307Z",
+  "transport": "default Node fetch, no --use-env-proxy",
+  "elapsedMs": 10705,
+  "mainlandCarrierVerified": false,
+  "paidCalls": 0,
+  "http": null,
+  "error": "TypeError",
+  "cause": "UND_ERR_CONNECT_TIMEOUT"
+}

@@ -1,0 +1,28 @@
+/* Inert design values: no existing component consumes these until migrated. */
+:root {
+  --canvas: #0b0a09;
+  --archive-surface: #191715;
+  --decor-ink: #b8ada0;
+  --text-primary: #f3eee8;
+  --text-secondary: #c9c0b6;
+  --text-on-signal: #17100a;
+  --signal-orange: #ff914a;
+  --text-body: 16px;
+  --text-title: clamp(24px, 2.4vw, 34px);
+  --text-display: clamp(36px, 4.5vw, 64px);
+  --text-meta: 13px;
+  --radius-panel: 18px;
+  --radius-control: 8px;
+  --glass-tint: rgb(25 23 21 / 76%);
+  --glass-blur: 18px;
+  --glass-border: rgb(232 216 195 / 18%);
+  --motion-duration: 320ms;
+  --motion-ease: cubic-bezier(.22,1,.36,1);
+  --motion-distance: 12px;
+  --ambient-duration: 70s;
+}
+.landing-product {
+  --brand-orange: #ed7627;
+  --brand-highlight: #ffe2ac;
+  --brand-shadow: #71300e;
+}

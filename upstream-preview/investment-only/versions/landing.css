@@ -1,0 +1,156 @@
+@import url('./glass.css');
+/* Landing components replace the former orbit-based presentation in full. */
+:root { color-scheme:dark; font-family:'Segoe UI','Microsoft YaHei',sans-serif; background:#0b0a09; color:#f3eee8; }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; scroll-padding-top:110px; -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+body { margin:0; background:var(--canvas); font-size:var(--text-body); }
+a { color:inherit; text-decoration:none; }
+a:focus-visible { outline:2px solid var(--text-primary); outline-offset:6px; }
+p { line-height:1.7; }
+.skip-link { position:fixed; left:24px; top:-100px; z-index:100; background:var(--text-primary); color:var(--canvas); padding:14px; }
+.skip-link:focus { top:15px; }
+.landing-nav { position:fixed; z-index:20; top:20px; left:4%; right:4%; height:70px; border:1px solid #b8ada036; border-radius:var(--radius-panel); background:#151310f5; display:flex; align-items:center; justify-content:space-between; padding:0 25px; }
+.landing-brand { display:flex; align-items:center; gap:11px; letter-spacing:1.5px; font-size:16px; font-weight:700; }
+.landing-brand b { font-weight:400; color:var(--text-secondary); }
+.brand-mark { position:relative; background:linear-gradient(135deg,var(--brand-highlight),var(--brand-orange) 60%,var(--brand-shadow)); background-clip:text; -webkit-text-fill-color:transparent; font-size:34px; font-weight:900; width:34px; }
+.brand-mark span { position:absolute; font-size:17px; right:0; top:0; }
+.landing-nav nav { display:flex; align-items:center; gap:30px; font-size:var(--text-body); }
+.nav-enter { border:1px solid #b8ada050; border-radius:var(--radius-control); padding:10px 17px; }
+.nav-enter span { padding-left:15px; }
+.scroll-story { height:100svh; min-height:800px; --progress:0; }
+.motion-ready .scroll-story { height:260svh; }
+.story-stage { position:sticky; top:0; height:100svh; min-height:800px; overflow:hidden; isolation:isolate; }
+.archive-host { position:absolute; inset:0; pointer-events:none; z-index:-1; }
+.story-copy,.story-next { position:absolute; left:8%; right:8%; top:17%; max-width:740px; z-index:3; }
+.story-next { opacity:0; visibility:hidden; }
+.eyebrow { color:var(--text-secondary); font:var(--text-meta)/1.5 Consolas,monospace; letter-spacing:2px; }
+.eyebrow>span { display:none; }
+h1,.story-next>p:nth-child(2) { font-size:var(--text-display); letter-spacing:-2px; font-weight:600; line-height:1.25; margin:22px 0; }
+h1>span,.story-next>p:nth-child(2)>span { white-space:nowrap; }
+.story-description,.story-next small { font-size:var(--text-body); color:var(--text-secondary); margin:0; }
+.story-action { position:absolute; right:8%; bottom:16%; z-index:4; display:flex; gap:45px; align-items:center; padding:18px 24px; border-radius:var(--radius-control); background:var(--signal-orange); color:var(--text-on-signal); font-weight:650; transition:transform var(--motion-duration) var(--motion-ease); }
+.story-action:hover { transform:translateY(-3px); }
+.object-stage { position:absolute; inset:0; pointer-events:none; z-index:2; }
+.coin-travel { position:absolute; left:8%; top:49%; width:clamp(260px,30vw,400px); aspect-ratio:1; transform-origin:center; filter:drop-shadow(0 22px 22px #0008); }
+.coin-flip { position:absolute; inset:0; transform-origin:center; }
+.k-coin-art { display:block; width:100%; height:100%; overflow:visible; }
+.coin-material { opacity:0; }
+.coin-glyph { position:absolute; inset:0; display:grid; place-content:center; opacity:0; font:700 clamp(85px,12vw,152px)/1 Georgia,serif; color:var(--brand-shadow); text-shadow:1px 2px 0 var(--brand-highlight); }
+.coin-edge-ridges { position:absolute; top:12%; bottom:10%; width:6%; left:47%; border-radius:50%; background:repeating-linear-gradient(0deg,var(--brand-shadow) 0 2px,var(--brand-highlight) 2px 3px,var(--brand-orange) 3px 6px); opacity:0; }
+.scene-bottom { position:absolute; bottom:30px; left:8%; right:8%; display:flex; gap:20px; align-items:center; font:var(--text-meta) Consolas,monospace; letter-spacing:1px; color:var(--text-secondary); }
+.scroll-meter { width:90px; height:2px; background:#ffffff25; }
+.scroll-meter i { display:block; width:calc(10% + var(--progress)*90%); height:100%; background:var(--text-secondary); }
+.scene-count { margin-left:auto; }
+.scene-count b { padding:0 14px; font-weight:400; }
+.explore-section { position:relative; isolation:isolate; overflow:hidden; padding:95px 8% 50px; background:var(--canvas); border-top:1px solid #b8ada036; scroll-margin-top:0; outline-offset:-5px; }
+.section-heading { position:relative; isolation:isolate; display:flex; justify-content:space-between; align-items:center; margin-bottom:54px; gap:32px; padding:28px 32px; border:1px solid #b8ada040; border-radius:var(--radius-panel); background:rgb(20 18 16 / 88%); backdrop-filter:blur(var(--glass-blur)); -webkit-backdrop-filter:blur(var(--glass-blur)); box-shadow:inset 0 1px 0 #f3dfbf12,0 0 20px #0003; }
+.section-heading::before { content:""; position:absolute; inset:-12px; z-index:-1; background:rgb(11 10 9 / 50%); border-radius:24px; pointer-events:none; }
+h2 { font-size:var(--text-title); font-weight:600; line-height:1.4; margin:15px 0 0; }
+.section-heading>p { color:var(--text-secondary); margin:0; max-width:360px; flex:1; }
+.feature-grid { position:relative; display:grid; grid-template-columns:1fr 1fr; gap:28px; }
+.feature-card { position:relative; border-radius:var(--radius-panel); padding:32px; min-width:0; overflow:hidden; transition:border-color var(--motion-duration) var(--motion-ease),transform var(--motion-duration) var(--motion-ease); }
+.feature-card:hover,.feature-card:focus-within { border-color:#ddd0b8; }
+.card-top { height:40px; border-bottom:1px solid #b8ada036; padding-bottom:12px; display:flex; align-items:center; justify-content:space-between; color:var(--text-secondary); font:var(--text-meta) Consolas,monospace; letter-spacing:1px; }
+.feature-icon { width:28px; height:28px; display:grid; place-content:center; flex:none; font:24px 'Segoe UI',sans-serif; }
+.archive-diagram { position:relative; container-type:inline-size; height:160px; display:flex; align-items:center; margin:20px 0; color:#d0c2ad70; border-bottom:1px solid #b8ada036; }
+.archive-diagram>span { font:100px/1 Consolas,monospace; letter-spacing:-.1em; }
+/* The number scales with its card so wide fallback fonts never run under the pan. */
+.archive-diagram>span { font-size:min(100px,27cqi); }
+
+
+.feature-card h3 { font-size:var(--text-title); font-weight:600; margin:18px 0; }
+.feature-card>p { color:var(--text-secondary); }
+/* Balance each sentence independently so short endings never stand alone. */
+.feature-description>span { display:block; text-wrap:balance; }
+.feature-description .copy-phrase { white-space:nowrap; }
+.feature-card ul { display:flex; flex-wrap:wrap; gap:10px; list-style:none; padding:0; margin:25px 0; }
+.feature-card li { border:1px solid #b8ada03d; border-radius:var(--radius-control); padding:6px 10px; font-size:var(--text-meta); color:var(--text-secondary); }
+.feature-link { display:flex; justify-content:space-between; align-items:center; border-top:1px solid #b8ada036; padding:22px 0 0; }
+.feature-link:hover,.feature-link:focus-visible { color:var(--signal-orange); }
+.method-strip { display:flex; gap:30px; justify-content:center; align-items:center; padding:30px 0; color:var(--text-secondary); }
+.method-strip b { font:var(--text-meta) Consolas,monospace; margin-right:12px; }
+.method-strip>span { color:var(--text-secondary); }
+footer { display:flex; gap:20px; justify-content:space-between; align-items:center; padding:30px 8%; font-size:var(--text-meta); color:var(--text-secondary); }
+footer>a:first-child { font-weight:700; letter-spacing:2px; }
+footer p { text-align:center; }
+@media(max-width:700px) {
+ .landing-nav { top:12px; left:14px; right:14px; height:64px; padding:0 16px; border-radius:var(--radius-panel); }
+ .landing-brand { font-size:13px; letter-spacing:1px; gap:8px; }
+ .brand-mark { font-size:28px; width:28px; }
+ .landing-nav nav { gap:10px; font-size:13px; }
+ .landing-nav nav>a:first-child { display:none; }
+ .nav-enter { padding:10px; }
+ .nav-enter span { display:none; }
+ .story-copy,.story-next { top:15%; left:7%; right:7%; }
+ h1,.story-next>p:nth-child(2) { font-size:min(34px,9vw); letter-spacing:-1px; margin:18px 0; }
+ .eyebrow { letter-spacing:0; }
+ .story-description { line-height:1.7; }
+ /* Phone: the button sits below the title and both description lines, never on top of them. */
+ .story-action { top:calc(15% + 235px); bottom:auto; left:7%; right:auto; padding:13px 18px; gap:32px; }
+ .coin-travel { top:55%; left:5%; width:240px; }
+ .scene-bottom { bottom:25px; left:7%; right:7%; gap:12px; font-size:12px; }
+ .scene-count { display:none; }
+ .explore-section { padding:85px 20px 25px; }
+ .section-heading { display:block; padding:24px 20px; }
+ .section-heading>p { margin-top:20px; }
+ .feature-grid { gap:10px; }
+ .feature-card { padding:20px 12px 14px; } /* clears the coin channel above the card label */
+ .card-top { font-size:12px; letter-spacing:0; }
+ .method-strip { gap:10px; font-size:13px; flex-wrap:wrap; }
+ .method-strip b { margin-right:4px; }
+ footer { flex-wrap:wrap; justify-content:space-between; padding:25px 20px; }
+ footer p { order:3; width:100%; text-align:left; margin:0; }
+}
+@media(prefers-reduced-motion:reduce) {
+ html { scroll-behavior:auto; }
+ .motion-ready .scroll-story { height:100svh; }
+ .coin-travel,.coin-flip { transform:none!important; }
+ .story-action:hover,.feature-card:hover,.feature-card:focus-within { transform:none; }
+}
+
+/* Liquid balance keeps the original vessel rectangle: left 38%, top/bottom 25%. */
+.liquid-vessel { position:absolute; left:38%; right:0; top:25%; bottom:25%; width:62%; padding:0; border:1px solid #b8ada070; border-radius:0; background:transparent; color:inherit; cursor:pointer; transform-origin:center; touch-action:manipulation; }
+.liquid-vessel:focus-visible { outline:2px solid var(--text-primary); outline-offset:5px; }
+.liquid-vessel[aria-disabled=true] { cursor:not-allowed; }
+.liquid-water { display:block; width:100%; height:100%; opacity:.6; transition:opacity 1.2s linear; }
+.feature-card[data-liquid-active=true] .liquid-water { opacity:1; transition-duration:0s; }
+.liquid-drops { position:absolute; left:0; top:-20px; width:100%; height:calc(100% + 20px); pointer-events:none; }
+.balance-caption { align-self:flex-end; display:flex; justify-content:space-between; align-items:center; gap:8px; width:100%; padding-bottom:7px; color:var(--text-secondary); font:12px/1.4 Consolas,monospace; }
+.archive-diagram>span { position:absolute; left:0; top:28px; pointer-events:none; }
+.balance-caption b { font:inherit; text-align:right; margin-left:auto; }
+.pour-hint { opacity:0; white-space:nowrap; transition:opacity var(--motion-duration); }
+.feature-card[data-ready=true]:hover .pour-hint,.feature-card[data-ready=true]:focus-within .pour-hint,.feature-card[data-hint=true] .pour-hint,.feature-card[data-full=true] .pour-hint { opacity:1; }
+/* The beam is the one orange line in this section, so the balance reads apart from the grid behind it. */
+.balance-beam { position:absolute; left:10%; right:10%; top:-23px; height:2px; pointer-events:none; }
+.balance-beam i { position:absolute; inset:0; border-radius:1px; background:linear-gradient(90deg,var(--brand-orange),var(--signal-orange) 50%,var(--brand-orange)); box-shadow:0 0 10px #ff914a55; transform:rotate(var(--beam-angle,0deg)); }
+.balance-beam i::before,.balance-beam i::after { content:""; position:absolute; top:0; width:2px; height:9px; border-radius:1px; background:var(--brand-orange); }
+.balance-beam i::before { left:0; }
+.balance-beam i::after { right:0; }
+.balance-beam span { position:absolute; left:calc(50% - 5px); top:6px; width:10px; height:10px; border:1.5px solid var(--signal-orange); background:#ff914a2e; box-shadow:0 0 8px #ff914a55; transform:rotate(45deg); }
+.balance-coin { position:absolute; top:0; left:0; width:54px; height:54px; pointer-events:none; opacity:0; z-index:3; will-change:transform; transition:opacity 160ms linear; }
+.balance-coin svg { display:block; width:100%; height:100%; }
+@media(max-width:700px) { .balance-coin { width:38px; height:38px; } }
+/* Phones keep the desktop balance: two pans side by side under one beam. */
+@media(max-width:700px) {
+ .feature-card .card-top { font-size:10px; align-items:flex-start; }
+ .feature-card .card-top>span:first-child { max-width:54%; line-height:1.35; }
+ .feature-card .feature-icon { display:none; }
+ .feature-card .archive-diagram { height:120px; margin:12px 0; }
+ .feature-card .archive-diagram>span { top:14px; }
+ .feature-card .liquid-vessel { left:46%; width:54%; top:14px; bottom:auto; height:52px; }
+ .feature-card .balance-caption { font-size:10px; padding-bottom:5px; }
+ .feature-card .balance-caption b { display:none; }
+ .feature-card h3 { font-size:17px; margin:12px 0 8px; }
+ .feature-card>p { font-size:12.5px; line-height:1.65; margin:0; }
+ .feature-card ul { gap:6px; margin:14px 0; }
+ .feature-card li { font-size:11px; padding:4px 7px; }
+ .feature-card .feature-link { font-size:13.5px; padding-top:12px; }
+}
+.pour-hint .hint-cn { display:none; }
+@media(hover:none) { .feature-card[data-ready=true] .pour-hint { opacity:1; }.pour-hint .hint-cn { display:block; }.pour-hint .hint-en { display:block; } }
+@media(prefers-reduced-motion:reduce) { .pour-hint,.liquid-water,.balance-coin { transition:none; } }
+
+/* Arrow icon drawn as SVG: iOS renders the text glyph U+2197 as a colour emoji. */
+.arrow-ne { display:inline-block; width:.78em; height:.78em; vertical-align:-.04em; fill:none; stroke:currentColor; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; overflow:visible; }
+/* The gradient-clipped K logo never showed its corner arrow; keep the approved look. */
+.brand-mark .arrow-ne { display:none; }

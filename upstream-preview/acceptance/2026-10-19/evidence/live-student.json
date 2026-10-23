@@ -1,0 +1,51 @@
+{
+  "timestamp": "2026-10-19T06:13:00.690Z",
+  "scope": "LOCAL_REAL_PROVIDER",
+  "cloudflareDeployed": false,
+  "cloudflareAccessVerified": false,
+  "storage": "in-memory test adapter, not Cloudflare SQLite",
+  "identity": "injected local test identity, not Cloudflare Access",
+  "mainlandNetworkVerified": false,
+  "authorizedCalls": 1,
+  "budgetCny": 0.01,
+  "attempts": 1,
+  "model": "qwen3.8-flash",
+  "baseUrl": "https://ws-h55unwqubcoxw7tb.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
+  "steps": [
+    {
+      "phase": "browser-local-server-bailian",
+      "http": 200,
+      "durationMs": 8568,
+      "model": "qwen3.8-flash",
+      "responseId": "chatcmpl-2e84e992-3e31-98e5-8741-f8a78fe93cc6",
+      "usage": {
+        "prompt_tokens": 727,
+        "total_tokens": 1148,
+        "completion_tokens": 421,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 727
+        }
+      },
+      "finishReason": "stop",
+      "content": "{\n  \"summary\": \"用户为大学生，持有10000元闲置资金，自述风险偏好中低，计划进行三年期投资。当前缺乏收入、负债及备用金等关键财务数据，无法提供个性化配置比例或适当性结论，仅可提供基于原则的教育性分析思路。\",\n  \"risk_level\": \"low\",\n  \"proposed_action\": \"HOLD_FOR_REVIEW\",\n  \"action_reason\": \"资金配置思路：建议首先建立紧急备用金（通常为3-6个月生活费），剩余资金再考虑投资；鉴于金额较小且为闲置资金，应优先保障流动性。\\n投资期限与流动性建议：三年期限属于中期目标，需平衡收益与流动性。建议避免锁定过长期限的产品，确保在急需时能部分赎回，同时匹配三年后可能的支出需求。\\n适合进一步研究的资产类别：可研究低风险固定收益类（如国债、高评级债券基金）、货币市场基金以及宽基指数基金（作为分散风险的权益类入门）。需注意各类产品的风险等级标签。\\n主要风险及注意事项：市场波动风险可能导致本金损失，尤其是权益类产品；通货膨胀可能侵蚀购买力；用户未提供最大回撤承受能力，需自行评估心理底线。所有分析仅为教育目的，不构成投资建议，不推荐具体个股或产品。\",\n  \"missing_information\": [\n    \"每月固定收入来源及金额\",\n    \"现有负债情况（如有）\",\n    \"已持有的紧急备用金规模\",\n    \"最大可承受的具体回撤百分比\",\n    \"三年后的具体资金使用场景（如考研、就业、留学等）\"\n  ],\n  \"evidence\": [\n    \"资料来源：虚构示例\",\n    \"投资金额：10000 元人民币\",\n    \"投资期限：1095 天\",\n    \"自述风险偏好：中低\",\n    \"最大可承受回撤：未提供\",\n    \"用户身份：中国大学生\"\n  ]\n}",
+      "errorCode": null
+    }
+  ],
+  "testInput": "我是一名中国大学生，目前有10000元闲置资金，风险承受能力中低，希望制定未来三年的投资计划，请分析我的投资偏好、资金配置思路和风险。",
+  "browser": {
+    "http": 200,
+    "durationMs": 8814,
+    "status": "AI 分析已返回，等待风险复核；未执行交易。",
+    "visible": true,
+    "summary": "用户为大学生，持有10000元闲置资金，自述风险偏好中低，计划进行三年期投资。当前缺乏收入、负债及备用金等关键财务数据，无法提供个性化配置比例或适当性结论，仅可提供基于原则的教育性分析思路。",
+    "meta": "Live AI 模型返回 · qwen3.8-flash · 8.59 秒 · 1148 tokens",
+    "analysis": "资金配置思路：建议首先建立紧急备用金（通常为3-6个月生活费），剩余资金再考虑投资；鉴于金额较小且为闲置资金，应优先保障流动性。\n投资期限与流动性建议：三年期限属于中期目标，需平衡收益与流动性。建议避免锁定过长期限的产品，确保在急需时能部分赎回，同时匹配三年后可能的支出需求。\n适合进一步研究的资产类别：可研究低风险固定收益类（如国债、高评级债券基金）、货币市场基金以及宽基指数基金（作为分散风险的权益类入门）。需注意各类产品的风险等级标签。\n主要风险及注意事项：市场波动风险可能导致本金损失，尤其是权益类产品；通货膨胀可能侵蚀购买力；用户未提供最大回撤承受能力，需自行评估心理底线。所有分析仅为教育目的，不构成投资建议，不推荐具体个股或产品。",
+    "runId": "review-d1589be9-2304-4224-9903-9ce663e36584",
+    "auditId": "audit-9d581df8-c5c4-4adf-bf7a-60f3f816e1ca",
+    "source": "model",
+    "callSucceeded": true,
+    "matchesProvider": true
+  },
+  "result": "LOCAL_REAL_CHAIN_PASSED"
+}

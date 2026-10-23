@@ -1,0 +1,68 @@
+{
+  "timestamp": "2026-10-19T05:30:02.675Z",
+  "scope": "LOCAL_REAL_PROVIDER",
+  "cloudflareDeployed": false,
+  "cloudflareAccessVerified": false,
+  "storage": "in-memory test adapter, not Cloudflare SQLite",
+  "identity": "injected local test identity, not Cloudflare Access",
+  "mainlandNetworkVerified": false,
+  "authorizedCalls": 2,
+  "budgetCny": 0.02,
+  "attempts": 2,
+  "model": "qwen3.8-flash",
+  "baseUrl": "https://ws-h55unwqubcoxw7tb.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
+  "steps": [
+    {
+      "phase": "server-to-bailian",
+      "http": 200,
+      "durationMs": 633,
+      "model": "qwen3.8-flash",
+      "responseId": "chatcmpl-d0a94639-7180-9eff-a4f2-d962f99bf805",
+      "usage": {
+        "prompt_tokens": 36,
+        "total_tokens": 41,
+        "completion_tokens": 5,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 36
+        }
+      },
+      "finishReason": "stop",
+      "content": "{\"ok\":true}",
+      "errorCode": null
+    },
+    {
+      "phase": "browser-local-server-bailian",
+      "http": 200,
+      "durationMs": 2837,
+      "model": "qwen3.8-flash",
+      "responseId": "chatcmpl-f80b7cc6-4d0b-9419-a039-dd7cf18d80b4",
+      "usage": {
+        "prompt_tokens": 539,
+        "total_tokens": 688,
+        "completion_tokens": 149,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 539
+        }
+      },
+      "finishReason": "stop",
+      "content": "{\n  \"summary\": \"用户表达保留备用金偏好，未提供持仓与行情数据。\",\n  \"risk_level\": \"low\",\n  \"proposed_action\": \"REQUEST_MORE_INFO\",\n  \"action_reason\": \"缺少可核查的持仓、资金明细及市场数据，无法进行有效评估或解释具体配置影响。\",\n  \"missing_information\": [\n    \"当前持仓明细\",\n    \"可用资金余额\",\n    \"备用金目标金额\",\n    \"风险承受能力确认文件\"\n  ],\n  \"evidence\": [\n    \"希望保留备用金\",\n    \"未提供持仓\",\n    \"market_data_available: false\"\n  ]\n}",
+      "errorCode": null
+    }
+  ],
+  "browser": {
+    "http": 200,
+    "durationMs": 3065,
+    "status": "AI 分析已返回，等待风险复核；未执行交易。",
+    "visible": true,
+    "summary": "用户表达保留备用金偏好，未提供持仓与行情数据。",
+    "meta": "模型生成 · qwen3.8-flash · 2.85 秒 · 688 tokens",
+    "runId": "review-d8e1c662-3bec-468f-862d-accf02f17ade",
+    "auditId": "audit-b95f54a2-e13a-4172-8edc-9628032e1b6d",
+    "source": "model",
+    "callSucceeded": true,
+    "matchesProvider": true
+  },
+  "result": "LOCAL_REAL_CHAIN_PASSED"
+}

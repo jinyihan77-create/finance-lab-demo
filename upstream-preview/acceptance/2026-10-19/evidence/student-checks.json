@@ -1,0 +1,46 @@
+{
+  "timestamp": "2026-10-19T06:19:31.445Z",
+  "baseline": "922d8a34d54c862d0353b14bb3a01ceba67b2476",
+  "core": {
+    "pass": 249,
+    "fail": 0
+  },
+  "candidate": {
+    "pass": 15,
+    "fail": 0
+  },
+  "browser": {
+    "widths": [
+      1440,
+      1024,
+      375
+    ],
+    "failureScenarios": 7,
+    "loadingVerified": true,
+    "realCalls": 0
+  },
+  "workerBuild": {
+    "wrangler": "4.151.1",
+    "pass": true,
+    "totalKiB": 303.03,
+    "gzipKiB": 66.75,
+    "assets": 34,
+    "deployed": false
+  },
+  "paidAcceptance": {
+    "calls": 1,
+    "evidence": "live-student.json",
+    "maxTokens": 1600,
+    "retries": 0,
+    "applicationReservationCny": 0.01
+  },
+  "finalWorkerBuild": {
+    "pass": true,
+    "totalKiB": 303.45,
+    "gzipKiB": 66.82,
+    "assets": 34,
+    "deployed": false
+  },
+  "evidenceIntegrity": "passed",
+  "secretScan": "passed"
+}

@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-19",
+  "wrangler": "4.151.1",
+  "workerd": "1.20261012.1",
+  "node": "v24.19.0",
+  "deployDryRun": {
+    "exitCode": 0,
+    "uploadKiB": 301.56,
+    "gzipKiB": 66.14,
+    "assets": 34,
+    "deployed": false
+  },
+  "types": {
+    "exitCode": 0,
+    "bindingsGenerated": true,
+    "runtimeGenerated": true,
+    "standaloneTypecheckConfigured": false
+  },
+  "localRuntime": {
+    "started": true,
+    "url": "http://127.0.0.1:8789",
+    "paidCalls": 0,
+    "secretsLoaded": false
+  },
+  "dependencyInstall": {
+    "pnpmExitCode": 1,
+    "errorCode": 23,
+    "error": "The operation was aborted due to timeout",
+    "missingPackage": "@cloudflare/workerd-windows-64@1.20261012.1",
+    "recovery": "Official tarball fetched with Node, SHA-512 checked against registry metadata, extracted into temporary dependency target",
+    "nativeBinarySha256": "2c264a7d92a13a638d9b7369366e78a8de26cc2ae570a6f9a09640bb5d9d95fa"
+  }
+}

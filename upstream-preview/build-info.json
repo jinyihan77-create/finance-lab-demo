@@ -1,0 +1,5 @@
+{
+  "mode": "STATIC_UI_ONLY",
+  "apiMocks": false,
+  "backend": "Not included. Service calls must fail visibly when unavailable."
+}

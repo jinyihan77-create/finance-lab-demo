@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>个人投资顾问 · 持仓健康管理</title><link rel="stylesheet" href="versions/style.css"><link rel="stylesheet" href="versions/product-overrides.css"><link rel="stylesheet" href="versions/tokens.css"><link rel="stylesheet" href="versions/site-shell.css"><link rel="stylesheet" href="versions/preview.css"></head>
+<body class="investment-product"><aside class="preview-notice" role="note"><strong>PREVIEW / DEMO</strong> · 仅供团队体验 UI · 后端未接入，不执行交易；请勿输入真实个人或金融资料。</aside>
+<header class="product-header"><a class="brand" href="investment.html"><span class="site-logo" role="img" aria-label="团队 K Logo"></span><span class="brand-copy">个人投资顾问<small>YOUR FUND MANAGER</small></span></a><nav class="product-nav" aria-label="网站导航"><a href="workspace.html">统一工作台</a><a href="landing.html">品牌首页</a><a href="catalog.html">工具目录</a></nav></header>
+<main class="compact-main">
+<section class="hero compact-hero"><div><p class="eyebrow">看收益 · 找风险 · 比方案</p><h1>你的组合 现在怎么样</h1><p class="muted hero-lede">先看关键数字，点开再看计算依据。</p></div><span class="product-stamp" id="portfolio-stamp">固定虚构演示</span></section>
+<div class="data-strip" id="portfolio-health"><span>正在读取数据日期…</span></div>
+<p id="input-changed" class="notice compact-notice" role="status" hidden>输入已改变，请重新检查；旧结论已隐藏。</p>
+<details class="panel input-panel" id="input-panel" open>
+<summary>偏好与持仓 <span class="small muted">开始前确认</span></summary>
+<form id="check-form">
+<div class="row"><p class="small muted">固定规则示例，偏好仅随任务交接，尚未做个性化适配。</p><button type="button" class="secondary" id="demo-profile">填入演示偏好</button></div>
+<div class="fields"><label class="field"><span class="term-label">投资期限（天） <button type="button" class="tip-toggle" data-tip-toggle="tip-horizon" aria-controls="tip-horizon" aria-expanded="false" aria-label="解释 投资期限">?</button></span><span class="tip-copy" id="tip-horizon" hidden>你预计这笔钱多久不会用到。时间越短，越需要留出可随时使用的钱。</span><input id="horizon" type="number" min="1" max="36500" required placeholder="例如 365"></label><label class="field"><span class="term-label">最大可接受回撤（%） <button type="button" class="tip-toggle" data-tip-toggle="tip-drawdown-input" aria-controls="tip-drawdown-input" aria-expanded="false" aria-label="解释 最大可接受回撤">?</button></span><span class="tip-copy" id="tip-drawdown-input" hidden>可以理解为：账户从高点往下跌多少时，你会觉得难以接受。</span><input id="drawdown" type="number" min="0.1" max="100" step=".1" required placeholder="例如 10"></label><label class="field"><span class="term-label">流动性需求 <button type="button" class="tip-toggle" data-tip-toggle="tip-liquidity" aria-controls="tip-liquidity" aria-expanded="false" aria-label="解释 流动性需求">?</button></span><span class="tip-copy" id="tip-liquidity" hidden>就是这笔钱要不要随时拿出来用。</span><select id="liquidity" required><option value="">请选择</option><option value="low">低 · 可长期持有</option><option value="medium">中 · 留出备用金</option><option value="high">高 · 近期要用钱</option></select></label></div>
+<details class="compact-detail"><summary>查看持仓明细</summary><div id="holdings"></div></details>
+<details class="compact-detail"><summary>替换组合 JSON</summary><p class="small">仅支持演示标的、固定价格与日期。只用于本次诊断。</p><textarea id="portfolio-json" aria-label="组合JSON"></textarea></details>
+<button id="run" type="submit" disabled>开始健康检查 →</button><p class="small danger" id="load-error" role="alert" hidden></p>
+</form></details>
+<div id="results" hidden>
+<section class="snapshot-card" id="result-summary"><div class="row"><div><p class="section-kicker">这段演示数据里</p><h2>收益与风险 一眼看清</h2></div><span class="small muted">不是实际账户盈亏</span></div><div class="metrics compact-metrics" id="risk-metrics"></div></section>
+<section class="panel next-steps-panel" id="next-steps-panel"><div class="row"><div><p class="section-kicker">看懂之后 / 下一步</p><h2>现在先检查什么</h2></div><span class="tag">只给核对顺序</span></div><p class="small muted" id="next-steps-intro">根据刚才的偏好与持仓，先做这三件小事；它们不会自动改变你的组合。</p><div class="next-step-grid" id="next-steps-list"></div><details class="compact-detail"><summary>什么时候需要重新检查？</summary><p class="small muted">投资期限、近期用钱计划、能承受的下跌幅度或组合中的最大仓位发生明显变化时，再重新运行一次。数据日期变旧时，也要先核对数据来源。</p></details></section>
+<section class="result-verdict"><div><p class="section-kicker">方案差异</p><h2 id="verdict-title"></h2><p id="verdict-copy"></p><details class="why-details"><summary>为什么这样判断</summary><ul id="verdict-evidence" class="evidence-list"></ul></details></div><span class="verdict-tag" id="verdict-tag"></span></section>
+<section class="panel" id="plans-panel"><div class="row"><div><p class="section-kicker">同窗口 · 同费用</p><h2>三种调整路径</h2></div><span class="tag">未做适配或审批</span></div><p class="small muted">标记仅表示本段虚构历史中回撤较小，不代表推荐、更优的未来收益或更适合你。</p><div id="comparison"></div>
+<details class="compact-detail"><summary>查看收益曲线与全部权重</summary><div id="investment-chart"></div><div id="weights"></div><p class="small muted" id="assumptions"></p></details></section>
+<details class="panel"><summary>组合集中在哪里？</summary><div id="findings"></div><p class="small muted">相关系数 ≥ 0.8 仅提示短窗口同向波动，不证明长期关系。</p></details>
+<details class="panel"><summary>任务状态与工具证据</summary><p class="small">任务已停在风控交接点；未接团队审批网关，不提供成交操作。</p><div id="task-status" class="tag"></div><pre id="evidence"></pre><button class="secondary" id="export">下载分析 JSON</button></details>
+</div></main>
+<footer class="footer">个人投资顾问 · 固定演示，非实时行情 · 不接真实账户 · 不构成投资建议</footer><div id="status" role="status" aria-live="polite"></div><script type="module" src="versions/investment.js"></script>
+</body></html>
