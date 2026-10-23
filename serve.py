@@ -27,7 +27,7 @@ import urllib.request
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 
 # pythonw 无窗口模式下 stdout 为 None，print 会崩溃——写入黑洞保持兼容
 if sys.stdout is None:
@@ -189,7 +189,8 @@ class Handler(BaseHTTPRequestHandler):
             if method=='GET' and path=='/api/assistant/state':
                 return self._json(200,{'state':service.state(session)})
             if method=='GET' and path=='/api/assistant/export':
-                body=service.export(session)
+                scope=parse_qs(urlparse(self.path).query).get('scope',['all'])[0]
+                body=service.export(session,scope)
                 self.send_response(200)
                 self.send_header('Content-Type','text/csv; charset=utf-8')
                 self.send_header('Content-Disposition','attachment; filename="finance-journal.csv"')

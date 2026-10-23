@@ -85,15 +85,21 @@ def event_date(clause: str, now: datetime, inherited: str) -> tuple[str, bool]:
     return inherited, True
 
 
+def split_clauses(text):
+    # Preserve decimals and comma thousands separators when splitting prose.
+    separated = re.sub(r"(?<=\d),(?=\d{3}(?:\D|$))", "", text)
+    separated = re.sub(r"(?:然后|另外|而且|同时|以及)", "；", separated)
+    # A new subject after a complete monetary unit is a new event, even in dictation.
+    separated = re.sub(r'(美元|美金|人民币|块钱|元|块)(\s*)(?=(?:今天|中午|晚上)?(?:工资|午饭|晚饭|打车|房租|订阅|买衣服|计划|打算))',r'\1；',separated)
+    return [c.strip() for c in re.split(r"[，,；;。！？!?\n]+", separated) if c.strip()]
+
+
 def extract(text: str, now: datetime | None = None) -> dict:
     if not isinstance(text, str) or not text.strip() or len(text) > 6000:
         raise ValueError("请输入 1–6000 字的内容。")
     now = (now or datetime.now(SHANGHAI)).astimezone(SHANGHAI)
     text = text.strip()
-    # Preserve decimals and comma thousands separators when splitting prose.
-    separated = re.sub(r"(?<=\d),(?=\d{3}(?:\D|$))", "", text)
-    separated = re.sub(r"(?:然后|另外|而且|同时|以及)", "；", separated)
-    clauses = [c.strip() for c in re.split(r"[，,；;。！？!?\n]+", separated) if c.strip()]
+    clauses = split_clauses(text)
     records, unclassified = [], []
     date = now.date().isoformat()
     unsafe = bool(re.search(r"忽略.{0,8}(规则|指令)|绕过.{0,8}(确认|风控)|无需确认|自动执行|system\s*:", text, re.I))
@@ -178,6 +184,12 @@ def extract(text: str, now: datetime | None = None) -> dict:
                         "ratio_base": "salary" if kind == "investment" and "工资" in clause else None,
                         "direction": "in" if kind == "income" or (kind == "investment" and re.search(r"卖出|赎回", clause)) else "out",
                         "notes": reasons})
+        if kind=='expense':
+            meal=next((label for label in ('早餐','午饭','晚饭') if re.search({'早餐':r'早餐|早饭','午饭':r'午饭|午餐|中午','晚饭':r'晚饭|晚餐|晚上'}[label],clause)),None)
+            if meal:records[-1]['meal']=meal
+        if kind!='coupon' and not (negated or uncertain or hypothetical or unsafe) and date_known and not re.search(r'欧元|港币|港元|日元|英镑|澳元|加元|EUR|HKD|JPY|GBP',clause,re.I):
+            if planned:records[-1]['followup_status']='plan'
+            elif re.search(r'到账|实付|实际支付|花了|花费|支付了|订阅了|开通了|买入了|卖出了',clause):records[-1]['followup_status']='recorded'
     salaries = [r for r in records if r["category"] == "工资" and r["status"] == "recorded" and r["amount_cents"] is not None]
     for row in records:
         if row["ratio"] is not None:

@@ -3,6 +3,8 @@ const labels = {income:'收入',expense:'生活',subscription:'订阅',investmen
 const statuses = {recorded:'已记录 · 自述',plan:'计划 · 未执行',review:'待核对',request:'待查优惠'};
 const titles = {overview:'我的概览',ledger:'生活账本',investment:'投资计划',memory:'记住的事'};
 const budgetLabels = {opening:'月初可用现金',essentials:'本月剩余必要开支',buffer:'应急预留'};
+const preferenceLabels={workflow:'整理方式',response_style:'反馈方式',memory_policy:'记忆方式',horizon:'投资期限',risk_preference:'风险偏好'};
+const preferenceValues={record_only:'只整理账本',budget_coach:'优先控制预算',investment_coach:'优先看投资安排',brief:'简短反馈',detailed:'详细解释',important_only:'只记重点',never:'不进入重点记忆',remember_default:'按重点记忆'};
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money = (n,c='CNY') => n == null ? '待补充' : `${c==='CNY'?'¥':'US$'}${(n/100).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
 const uuid = () => crypto.randomUUID();
@@ -55,7 +57,7 @@ function render(){
   $('messages').innerHTML=messages.map(m=>{
     if(m.role==='user')return `<article class="message user" aria-label="你">${esc(m.text)}</article>`;
     const rows=(m.record_ids || []).map(id=>state.records.find(r=>r.id===id)).filter(Boolean);
-    return `<article class="message assistant" aria-label="Finance Lab"><div class="assistant-label"><span class="mini-k" aria-hidden="true">K</span>Finance Lab</div><div class="message-copy">${esc(m.text)}</div>${rows.length?inlineRecords(rows):''}<div class="message-actions">${(m.actions || []).map(a=>a.kind==='panel'?`<button data-panel="${esc(a.panel)}">${esc(a.label)} ↗</button>`:`<button data-ask="${esc(a.text)}">${esc(a.label)}</button>`).join('')}</div>${m.engine==='core-agent'?'<p class="message-meta">来自团队模型的分析 · 未执行资金操作</p>':''}</article>`;
+    return `<article class="message assistant" aria-label="Finance Lab"><div class="assistant-label"><span class="mini-k" aria-hidden="true">K</span>Finance Lab</div><div class="message-copy">${esc(m.text)}</div>${rows.length?inlineRecords(rows):''}<div class="message-actions">${(m.actions || []).map(a=>a.kind==='panel'?`<button data-panel="${esc(a.panel)}">${esc(a.label)} ↗</button>`:a.kind==='download'?`<a class="quiet" href="${a.href==='/api/assistant/export?scope=investment'?a.href:'/api/assistant/export'}" download>${esc(a.label)} ↓</a>`:a.kind==='edit'?`<button data-edit="${esc(a.id)}">${esc(a.label)}</button>`:`<button data-ask="${esc(a.text)}">${esc(a.label)}</button>`).join('')}</div>${m.engine==='core-agent'?'<p class="message-meta">来自团队模型的分析 · 未执行资金操作</p>':''}</article>`;
   }).join('');
   if(panel)renderPanel(); showEdit();
   requestAnimationFrame(()=>{ $('chat-scroll').scrollTop=$('chat-scroll').scrollHeight; });
@@ -78,9 +80,9 @@ function renderPanel(){
   rows=[...rows].sort((a,b)=>b.occurred_on.localeCompare(a.occurred_on)||b.recorded_at.localeCompare(a.recorded_at));
   const intro=panel==='memory'?'重要事项按时间整理。忘记摘要后，原始对话和账本仍保留。':panel==='investment'?'计划与自述成交分开保存；尚未连接券商，不能作为已核验持仓。':'支持随时修改、删除和导出，待核对项目不计入收支。';
   let content=`<p class="panel-note">${intro}</p>`;
-  if(panel==='memory'&&Object.keys(state.profile).length)content+=`<section class="panel-section"><h3>你的偏好</h3><p class="panel-note">${esc(Object.values(state.profile).join(' · '))}</p><button class="quiet" data-ask="忘记我的投资偏好">忘记这些偏好</button></section>`;
+  if(panel==='memory')content+=`<section class="panel-section"><h3>按你的方式整理</h3><p class="panel-note">${Object.entries(state.profile).map(([k,v])=>`${esc(preferenceLabels[k]||k)}：${esc(preferenceValues[v]||v)}`).join('<br>') || '还没有指定偏好。可以直接说“我只想记账”“我想控制开支”或“回答简短一点”。'}</p>${Object.keys(state.profile).length?'<button class="quiet" data-ask="忘记我的偏好">忘记这些偏好</button>':''}</section>`;
   if(!rows.length)content+=empty(panel==='memory'?'重点会留在这里':'目前还没有记录',panel==='memory'?'投资计划和大额事项会保留时间与来源，随时可移除。':'在对话里告诉我发生了什么，就能开始整理。');
-  if(panel==='ledger')content+=`<div class="panel-tools"><span>${rows.length} 条记录</span><a class="quiet" href="/api/assistant/export" download>导出表格 ↓</a></div>`;
+  if(panel==='ledger'||panel==='investment')content+=`<div class="panel-tools"><span>${rows.length} 条记录</span><a class="quiet" href="/api/assistant/export${panel==='investment'?'?scope=investment':''}" download>导出表格 ↓</a></div>`;
   content+=rows.map(r=>`<article class="panel-record"><time datetime="${esc(r.occurred_on)}">${esc(r.occurred_on)} · ${esc(labels[r.kind])}${r.attention==='high'?' · 重点':''}</time><div class="record-top"><h3>${esc(r.title)}</h3><strong>${money(r.amount_cents,r.currency)}</strong></div><span class="status-label ${esc(r.status)}">${esc(statuses[r.status])}</span>${(r.notes||[]).map(n=>`<p class="panel-note">${esc(n)}</p>`).join('')}<div class="record-actions">${panel==='memory'?`<button data-forget="${esc(r.id)}">忘记摘要</button>`:`<button data-edit="${esc(r.id)}">修改</button><button class="danger" data-delete="${esc(r.id)}">删除</button>`}</div></article>`).join('');
   $('panel-content').innerHTML=content;
 }

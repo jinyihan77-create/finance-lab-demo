@@ -59,5 +59,9 @@ class HTTPTests(unittest.TestCase):
         for body in ['{}','[]','invalid-json']:
             self.assertEqual(self.request('POST','/api/assistant/message',body,h)[0],400)
 
+    def test_export_scope_is_validated(self):
+        self.assertEqual(self.request('GET','/api/assistant/export?scope=investment')[0],200)
+        self.assertEqual(self.request('GET','/api/assistant/export?scope=unknown')[0],400)
+
 
 if __name__=='__main__':unittest.main()
